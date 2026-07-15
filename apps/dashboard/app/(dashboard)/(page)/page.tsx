@@ -5,7 +5,7 @@ export default async function DashboardPage() {
     const shopCtx = await requireActiveShopContext();
 
     return (
-        <div className="container mx-auto space-y-6 pb-12">
+        <div className="container space-y-6 pb-12">
             <Statistic />
         </div>
     );
