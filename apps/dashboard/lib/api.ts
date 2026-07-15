@@ -305,14 +305,14 @@ export async function disconnectSocialConnection(
 }
 
 export async function startSocialOAuth(shopId: string) {
-    return authFetcher("/api/v1/marketing/social/oauth/start/", {
+    return authFetcher("/api/v1/marketing/social/connect/start/", {
         method: "POST",
         headers: { "X-Tenant-ID": shopId },
     });
 }
 
 export async function handleSocialOAuthCallback(shopId: string, data: any) {
-    return authFetcher("/api/v1/marketing/social/oauth/callback/", {
+    return authFetcher("/api/v1/marketing/social/connect/callback/", {
         method: "POST",
         body: data,
         headers: { "X-Tenant-ID": shopId },
@@ -720,3 +720,42 @@ export async function getAiUsageLog(shopId: string) {
         headers: { "X-Tenant-ID": shopId },
     });
 }
+
+// ─── WhatsApp Config API ─────────────────────────────────────────────────────
+
+export async function getWhatsAppConfig(shopId: string) {
+    return authFetcher("/api/v1/chat/whatsapp/config/", {
+        headers: { "X-Tenant-ID": shopId },
+    });
+}
+
+export async function disconnectWhatsAppConfig(shopId: string) {
+    return authFetcher("/api/v1/chat/whatsapp/config/", {
+        method: "DELETE",
+        headers: { "X-Tenant-ID": shopId },
+    });
+}
+
+export async function startWhatsAppOAuth(shopId: string) {
+    return authFetcher("/api/v1/chat/whatsapp/oauth/start/", {
+        method: "POST",
+        headers: { "X-Tenant-ID": shopId },
+    });
+}
+
+export async function handleWhatsAppOAuthCallback(shopId: string, data: any) {
+    return authFetcher("/api/v1/chat/whatsapp/oauth/callback/", {
+        method: "POST",
+        body: data,
+        headers: { "X-Tenant-ID": shopId },
+    });
+}
+
+export async function saveWhatsAppOAuthSelection(shopId: string, data: any) {
+    return authFetcher("/api/v1/chat/whatsapp/oauth/save/", {
+        method: "POST",
+        body: data,
+        headers: { "X-Tenant-ID": shopId },
+    });
+}
+

@@ -27,12 +27,6 @@ import {
     SelectValue
 } from "@repo/ui/components/ui/select";
 import {
-    Tabs,
-    TabsContent,
-    TabsList,
-    TabsTrigger
-} from "@repo/ui/components/ui/tabs";
-import {
     Field,
     FieldLabel,
     FieldDescription,
@@ -224,21 +218,32 @@ export function ProductForm({
     return (
         <form
             onSubmit={handleSubmit(onSubmit)}
-            className="flex flex-col gap-6 pb-20"
+            className="flex flex-col gap-6 pb-12 container"
         >
-            {/* ── Header bar ──────────────────────────────────────────── */}
-            <div className="h-header flex items-center justify-between sticky top-0 z-20 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 py-3 border-b -mx-6 px-6 -mt-6 mb-2">
+            {/* ── Header ────────────────────────────────────────────── */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-2 mb-2">
                 <div className="flex items-center gap-4">
                     <SidebarTrigger className="-ml-2" />
                     <Separator orientation="vertical" className="h-6" />
                     <div>
-                        <h1 className="text-xl font-bold tracking-tight">
-                            {mode === "create"
-                                ? "New Product"
-                                : watchedName || "Edit Product"}
-                        </h1>
+                        <div className="flex items-center gap-3">
+                            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+                                {mode === "create"
+                                    ? "New Product"
+                                    : watchedName || "Edit Product"}
+                            </h1>
+                            {isDirty && (
+                                <Badge
+                                    variant="outline"
+                                    className="animate-pulse bg-amber-50 text-amber-700 border-amber-200 gap-1 hidden sm:flex"
+                                >
+                                    <span className="size-1.5 rounded-full bg-amber-500" />
+                                    Unsaved Changes
+                                </Badge>
+                            )}
+                        </div>
                         {initialData && (
-                            <div className="flex items-center gap-2 mt-0.5">
+                            <div className="flex items-center gap-2 mt-1">
                                 <Badge
                                     variant="outline"
                                     className="font-mono text-[10px] h-4 px-1 opacity-70"
@@ -257,549 +262,182 @@ export function ProductForm({
                         )}
                     </div>
                 </div>
+                
+                <div className="flex items-center gap-3 self-end sm:self-auto">
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => router.back()}
+                        className="text-muted-foreground hover:text-foreground"
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="shadow-lg shadow-primary/20"
+                    >
+                        {isSubmitting ? (
+                            <IconLoader2 className="size-4 animate-spin mr-2" />
+                        ) : (
+                            <IconDeviceFloppy className="size-4 mr-2" />
+                        )}
+                        {mode === "create" ? "Create Product" : "Save Changes"}
+                    </Button>
+                </div>
             </div>
 
             {/* ── Main content ─────────────────────────────────────────── */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Left column: product details */}
+                {/* Left column: main product details */}
                 <div className="lg:col-span-2 space-y-8">
-                    <Tabs defaultValue="basic" className="w-full">
-                        <TabsList className="grid w-full grid-cols-4">
-                            <TabsTrigger value="basic">Basic Info</TabsTrigger>
-                            <TabsTrigger value="variants">Variants</TabsTrigger>
-                            <TabsTrigger value="specifications">
-                                Specifications
-                            </TabsTrigger>
-                            <TabsTrigger value="seo">SEO</TabsTrigger>
-                        </TabsList>
-
-                        {/* ── Basic Tab ─────────────────────────────────────── */}
-                        <TabsContent value="basic" className="space-y-6 mt-6">
-                            <Card className="shadow-sm border-muted/60">
-                                <CardHeader>
-                                    <CardTitle>Product Details</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <FieldGroup>
-                                        <Controller
-                                            name="name"
-                                            control={control}
-                                            render={({ field, fieldState }) => (
-                                                <Field
-                                                    data-invalid={
-                                                        !!fieldState.error
-                                                    }
-                                                >
-                                                    <FieldLabel
-                                                        htmlFor={field.name}
-                                                    >
-                                                        Product Name *
-                                                    </FieldLabel>
-                                                    <Input
-                                                        {...field}
-                                                        value={
-                                                            field.value ?? ""
-                                                        }
-                                                        id={field.name}
-                                                        placeholder="e.g. Classic Cotton T-Shirt"
-                                                        className="text-lg h-12"
-                                                    />
-                                                    <FieldError
-                                                        errors={[
-                                                            fieldState.error
-                                                        ]}
-                                                    />
-                                                </Field>
-                                            )}
-                                        />
-
-                                        <Controller
-                                            name="description"
-                                            control={control}
-                                            render={({ field, fieldState }) => (
-                                                <Field
-                                                    data-invalid={
-                                                        !!fieldState.error
-                                                    }
-                                                >
-                                                    <div className="flex items-center justify-between mb-2">
-                                                        <FieldLabel
-                                                            htmlFor={field.name}
-                                                        >
-                                                            Description
-                                                        </FieldLabel>
-                                                        <ProductAIPrompter
-                                                            shopId={shopId}
-                                                            productName={
-                                                                watchedName
-                                                            }
-                                                            specifications={
-                                                                watch(
-                                                                    "specifications"
-                                                                ) || {}
-                                                            }
-                                                            onGenerate={(
-                                                                desc
-                                                            ) =>
-                                                                setValue(
-                                                                    "description",
-                                                                    desc,
-                                                                    {
-                                                                        shouldDirty: true
-                                                                    }
-                                                                )
-                                                            }
-                                                        />
-                                                    </div>
-                                                    <RichTextEditor
-                                                        value={
-                                                            field.value ?? ""
-                                                        }
-                                                        onChange={
-                                                            field.onChange
-                                                        }
-                                                    />
-                                                    <FieldError
-                                                        errors={[
-                                                            fieldState.error
-                                                        ]}
-                                                    />
-                                                </Field>
-                                            )}
-                                        />
-                                    </FieldGroup>
-                                </CardContent>
-                            </Card>
-
-                            {/* Images */}
-                            <Card className="shadow-sm border-muted/60">
-                                <CardHeader>
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <CardTitle>
-                                                Product Images
-                                            </CardTitle>
-                                            <CardDescription className="mt-1">
-                                                First image is the primary
-                                                thumbnail.
-                                            </CardDescription>
-                                        </div>
-                                        <ProductAIImageGen
-                                            shopId={shopId}
-                                            productName={watchedName}
-                                            onImageGenerated={(mediaId) => {
-                                                const currentIds = watch("media_ids") || [];
-                                                setValue("media_ids", [...currentIds, mediaId], { shouldDirty: true });
-                                            }}
-                                        />
-                                    </div>
-                                </CardHeader>
-                                <CardContent>
-                                    <ImageUploader
-                                        shopId={shopId}
-                                        value={watch("media_ids") || []}
-                                        initialImages={initialData?.product_media?.map((pm) => ({
-                                            id: pm.media.id,
-                                            cdnUrl: pm.media.cdn_url,
-                                            filename: pm.media.original_filename || "image",
-                                            status: "done" as const
-                                        }))}
-                                        onChange={(ids) => setValue("media_ids", ids, { shouldDirty: true })}
-                                        maxImages={10}
-                                    />
-                                </CardContent>
-                            </Card>
-                        </TabsContent>
-
-                        {/* ── Variants Tab ──────────────────────────────────── */}
-                        <TabsContent value="variants" className="mt-6">
-                            <Card className="shadow-sm border-muted/60">
-                                <CardHeader>
-                                    <CardTitle>Product Variants</CardTitle>
-                                    <CardDescription>
-                                        Define attributes like Size or Color to
-                                        create multiple variations.
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    {mode === "create" ? (
-                                        <VariantMatrix
-                                            onVariantsGenerated={setVariantRows}
-                                        />
-                                    ) : (
-                                        <VariantManager
-                                            shopId={shopId}
-                                            productId={initialData!.id}
-                                            initialVariants={initialData?.variants || []}
-                                        />
-                                    )}
-                                </CardContent>
-                            </Card>
-                        </TabsContent>
-
-                        {/* ── Specifications Tab ────────────────────────────── */}
-                        <TabsContent value="specifications" className="mt-6">
-                            <Card className="shadow-sm border-muted/60">
-                                <CardHeader>
-                                    <CardTitle>
-                                        Product Specifications
-                                    </CardTitle>
-                                    <CardDescription>
-                                        Add technical details, materials, or
-                                        custom key-value pairs.
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    <Controller
-                                        name="specifications"
-                                        control={control}
-                                        render={({ field }) => (
-                                            <SpecificationsEditor
-                                                value={field.value}
-                                                onChange={field.onChange}
-                                            />
-                                        )}
-                                    />
-                                </CardContent>
-                            </Card>
-                        </TabsContent>
-
-                        {/* ── SEO Tab ───────────────────────────────────────── */}
-                        <TabsContent value="seo" className="mt-6">
-                            <Card className="shadow-sm border-muted/60">
-                                <CardHeader>
-                                    <CardTitle>
-                                        Search Engine Optimization
-                                    </CardTitle>
-                                    <CardDescription>
-                                        Optimize how your product appears in
-                                        search results.
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    <FieldGroup>
-                                        <Controller
-                                            name="seo_title"
-                                            control={control}
-                                            render={({ field, fieldState }) => (
-                                                <Field
-                                                    data-invalid={
-                                                        !!fieldState.error
-                                                    }
-                                                >
-                                                    <FieldLabel
-                                                        htmlFor={field.name}
-                                                    >
-                                                        SEO Title
-                                                        <span className="ml-auto text-xs text-muted-foreground">
-                                                            {field.value
-                                                                ?.length ??
-                                                                0}{" "}
-                                                            / 120
-                                                        </span>
-                                                    </FieldLabel>
-                                                    <Input
-                                                        {...field}
-                                                        value={
-                                                            field.value ?? ""
-                                                        }
-                                                        id={field.name}
-                                                        placeholder="Leave blank to use product name"
-                                                    />
-                                                    <FieldError
-                                                        errors={[
-                                                            fieldState.error
-                                                        ]}
-                                                    />
-                                                </Field>
-                                            )}
-                                        />
-
-                                        <Controller
-                                            name="seo_description"
-                                            control={control}
-                                            render={({ field, fieldState }) => (
-                                                <Field
-                                                    data-invalid={
-                                                        !!fieldState.error
-                                                    }
-                                                >
-                                                    <FieldLabel
-                                                        htmlFor={field.name}
-                                                    >
-                                                        Meta Description
-                                                        <span className="ml-auto text-xs text-muted-foreground">
-                                                            {field.value
-                                                                ?.length ??
-                                                                0}{" "}
-                                                            / 320
-                                                        </span>
-                                                    </FieldLabel>
-                                                    <Textarea
-                                                        {...field}
-                                                        value={
-                                                            field.value ?? ""
-                                                        }
-                                                        id={field.name}
-                                                        placeholder="Brief summary for search results..."
-                                                        rows={4}
-                                                    />
-                                                    <FieldError
-                                                        errors={[
-                                                            fieldState.error
-                                                        ]}
-                                                    />
-                                                </Field>
-                                            )}
-                                        />
-
-                                        <Controller
-                                            name="slug"
-                                            control={control}
-                                            render={({ field, fieldState }) => (
-                                                <Field
-                                                    data-invalid={
-                                                        !!fieldState.error
-                                                    }
-                                                >
-                                                    <FieldLabel
-                                                        htmlFor={field.name}
-                                                    >
-                                                        URL Slug
-                                                    </FieldLabel>
-                                                    <Input
-                                                        {...field}
-                                                        value={
-                                                            field.value ?? ""
-                                                        }
-                                                        id={field.name}
-                                                        placeholder="auto-generated-from-name"
-                                                    />
-                                                    <FieldDescription>
-                                                        The URL path for this
-                                                        product.
-                                                    </FieldDescription>
-                                                    <FieldError
-                                                        errors={[
-                                                            fieldState.error
-                                                        ]}
-                                                    />
-                                                </Field>
-                                            )}
-                                        />
-                                    </FieldGroup>
-                                </CardContent>
-                            </Card>
-                        </TabsContent>
-                    </Tabs>
-                </div>
-
-                {/* Right column: operational settings */}
-                <div className="space-y-6">
-                    {/* Status Card */}
-                    <Card className="shadow-sm border-l-4 border-l-primary/40">
-                        <CardHeader className="pb-3">
-                            <CardTitle className="text-lg">
-                                Publishing
-                            </CardTitle>
+                    {/* Basic Info */}
+                    <Card className="shadow-sm border-muted/60">
+                        <CardHeader>
+                            <CardTitle>Product Details</CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                            <Controller
-                                name="status"
-                                control={control}
-                                render={({ field, fieldState }) => (
-                                    <Field data-invalid={!!fieldState.error}>
-                                        <Select
-                                            value={field.value}
-                                            onValueChange={field.onChange}
-                                        >
-                                            <SelectTrigger
-                                                id={field.name}
-                                                className="w-full"
-                                            >
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="DRAFT">
-                                                    Draft
-                                                </SelectItem>
-                                                <SelectItem value="PUBLISHED">
-                                                    Published
-                                                </SelectItem>
-                                                <SelectItem value="SCHEDULED">
-                                                    Scheduled
-                                                </SelectItem>
-                                                <SelectItem value="ARCHIVED">
-                                                    Archived
-                                                </SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                        <FieldError
-                                            errors={[fieldState.error]}
-                                        />
-                                    </Field>
-                                )}
-                            />
-
-                            {watchedStatus === "SCHEDULED" && (
+                        <CardContent>
+                            <FieldGroup>
                                 <Controller
-                                    name="publish_at"
+                                    name="name"
                                     control={control}
                                     render={({ field, fieldState }) => (
-                                        <Field
-                                            data-invalid={!!fieldState.error}
-                                        >
+                                        <Field data-invalid={!!fieldState.error}>
                                             <FieldLabel htmlFor={field.name}>
-                                                Schedule For
+                                                Product Name *
                                             </FieldLabel>
                                             <Input
                                                 {...field}
-                                                id={field.name}
-                                                type="datetime-local"
                                                 value={field.value ?? ""}
+                                                id={field.name}
+                                                placeholder="e.g. Classic Cotton T-Shirt"
+                                                className="text-lg h-12"
                                             />
-                                            <FieldError
-                                                errors={[fieldState.error]}
-                                            />
+                                            <FieldError errors={[fieldState.error]} />
                                         </Field>
                                     )}
                                 />
-                            )}
+
+                                <Controller
+                                    name="description"
+                                    control={control}
+                                    render={({ field, fieldState }) => (
+                                        <Field data-invalid={!!fieldState.error}>
+                                            <div className="flex items-center justify-between mb-2">
+                                                <FieldLabel htmlFor={field.name}>
+                                                    Description
+                                                </FieldLabel>
+                                                <ProductAIPrompter
+                                                    shopId={shopId}
+                                                    productName={watchedName}
+                                                    specifications={watch("specifications") || {}}
+                                                    onGenerate={(desc) =>
+                                                        setValue("description", desc, {
+                                                            shouldDirty: true
+                                                        })
+                                                    }
+                                                />
+                                            </div>
+                                            <RichTextEditor
+                                                value={field.value ?? ""}
+                                                onChange={field.onChange}
+                                            />
+                                            <FieldError errors={[fieldState.error]} />
+                                        </Field>
+                                    )}
+                                />
+                            </FieldGroup>
                         </CardContent>
                     </Card>
 
-                    {/* Inventory Card - High Prominence for Simple Products */}
-                    {shouldShowSimpleStock && (
-                        <Card className="shadow-md border-primary/20 bg-primary/5 ring-1 ring-primary/10">
-                            <CardHeader className="pb-3">
-                                <div className="flex items-center justify-between">
-                                    <CardTitle className="text-lg">
-                                        Inventory
-                                    </CardTitle>
-                                    <Badge
-                                        variant="secondary"
-                                        className="bg-primary/10 text-primary border-primary/20"
-                                    >
-                                        Stock Level
-                                    </Badge>
+                    {/* Images */}
+                    <Card className="shadow-sm border-muted/60">
+                        <CardHeader>
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <CardTitle>Media</CardTitle>
+                                    <CardDescription className="mt-1">
+                                        First image is the primary thumbnail.
+                                    </CardDescription>
                                 </div>
-                                <CardDescription>
-                                    Manage availability for this product.
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <Controller
-                                    name="stock_quantity"
-                                    control={control}
-                                    render={({ field, fieldState }) => (
-                                        <Field
-                                            data-invalid={!!fieldState.error}
-                                        >
-                                            <FieldLabel htmlFor={field.name}>
-                                                Stock Quantity
-                                            </FieldLabel>
-                                            <Input
-                                                {...field}
-                                                value={field.value ?? 0}
-                                                onChange={(e) =>
-                                                    field.onChange(
-                                                        parseInt(
-                                                            e.target.value
-                                                        ) || 0
-                                                    )
-                                                }
-                                                id={field.name}
-                                                type="number"
-                                                min={0}
-                                                className="text-2xl font-bold h-14"
-                                            />
-                                            <FieldError
-                                                errors={[fieldState.error]}
-                                            />
-                                        </Field>
-                                    )}
+                                <ProductAIImageGen
+                                    shopId={shopId}
+                                    productName={watchedName}
+                                    onImageGenerated={(mediaId) => {
+                                        const currentIds = watch("media_ids") || [];
+                                        setValue("media_ids", [...currentIds, mediaId], { shouldDirty: true });
+                                    }}
                                 />
-                                <Controller
-                                    name="sku"
-                                    control={control}
-                                    render={({ field, fieldState }) => (
-                                        <Field
-                                            data-invalid={!!fieldState.error}
-                                        >
-                                            <FieldLabel htmlFor={field.name}>
-                                                SKU
-                                            </FieldLabel>
-                                            <Input
-                                                {...field}
-                                                value={field.value ?? ""}
-                                                id={field.name}
-                                                placeholder="Unique identifier"
-                                            />
-                                            <FieldError
-                                                errors={[fieldState.error]}
-                                            />
-                                        </Field>
-                                    )}
-                                />
-                            </CardContent>
-                        </Card>
-                    )}
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <ImageUploader
+                                shopId={shopId}
+                                value={watch("media_ids") || []}
+                                initialImages={initialData?.product_media?.map((pm) => ({
+                                    id: pm.media.id,
+                                    cdnUrl: pm.media.cdn_url,
+                                    filename: pm.media.original_filename || "image",
+                                    status: "done" as const
+                                }))}
+                                onChange={(ids) => setValue("media_ids", ids, { shouldDirty: true })}
+                                maxImages={10}
+                            />
+                        </CardContent>
+                    </Card>
 
-                    {/* Pricing Card */}
+                    {/* Pricing */}
                     <Card className="shadow-sm border-muted/60">
                         <CardHeader className="pb-3">
                             <CardTitle className="text-lg">Pricing</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <Controller
-                                name="base_price"
-                                control={control}
-                                render={({ field, fieldState }) => (
-                                    <Field data-invalid={!!fieldState.error}>
-                                        <FieldLabel htmlFor={field.name}>
-                                            Base Price (BDT) *
-                                        </FieldLabel>
-                                        <Input
-                                            {...field}
-                                            value={field.value ?? ""}
-                                            id={field.name}
-                                            type="number"
-                                            min={0}
-                                            step="0.01"
-                                            placeholder="0.00"
-                                            className="text-lg"
-                                        />
-                                        <FieldError
-                                            errors={[fieldState.error]}
-                                        />
-                                    </Field>
-                                )}
-                            />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <Controller
+                                    name="base_price"
+                                    control={control}
+                                    render={({ field, fieldState }) => (
+                                        <Field data-invalid={!!fieldState.error}>
+                                            <FieldLabel htmlFor={field.name}>
+                                                Base Price (BDT) *
+                                            </FieldLabel>
+                                            <Input
+                                                {...field}
+                                                value={field.value ?? ""}
+                                                id={field.name}
+                                                type="number"
+                                                min={0}
+                                                step="0.01"
+                                                placeholder="0.00"
+                                            />
+                                            <FieldError errors={[fieldState.error]} />
+                                        </Field>
+                                    )}
+                                />
 
-                            <Controller
-                                name="compare_at_price"
-                                control={control}
-                                render={({ field, fieldState }) => (
-                                    <Field data-invalid={!!fieldState.error}>
-                                        <FieldLabel htmlFor={field.name}>
-                                            Compare-at Price
-                                        </FieldLabel>
-                                        <Input
-                                            {...field}
-                                            value={field.value ?? ""}
-                                            id={field.name}
-                                            type="number"
-                                            min={0}
-                                            step="0.01"
-                                            placeholder="Original price"
-                                        />
-                                        <FieldError
-                                            errors={[fieldState.error]}
-                                        />
-                                    </Field>
-                                )}
-                            />
-
+                                <Controller
+                                    name="compare_at_price"
+                                    control={control}
+                                    render={({ field, fieldState }) => (
+                                        <Field data-invalid={!!fieldState.error}>
+                                            <FieldLabel htmlFor={field.name}>
+                                                Compare-at Price
+                                            </FieldLabel>
+                                            <Input
+                                                {...field}
+                                                value={field.value ?? ""}
+                                                id={field.name}
+                                                type="number"
+                                                min={0}
+                                                step="0.01"
+                                                placeholder="Original price"
+                                            />
+                                            <FieldError errors={[fieldState.error]} />
+                                        </Field>
+                                    )}
+                                />
+                            </div>
+                            
                             <Controller
                                 name="tax_rate"
                                 control={control}
@@ -817,91 +455,72 @@ export function ProductForm({
                                             max={1}
                                             step="0.01"
                                         />
-                                        <FieldError
-                                            errors={[fieldState.error]}
-                                        />
+                                        <FieldError errors={[fieldState.error]} />
                                     </Field>
                                 )}
                             />
                         </CardContent>
                     </Card>
 
-                    {/* Organization Card */}
-                    <Card className="shadow-sm border-muted/60">
-                        <CardHeader className="pb-3">
-                            <CardTitle className="text-lg">
-                                Organization
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <Controller
-                                name="category_id"
-                                control={control}
-                                render={({ field, fieldState }) => (
-                                    <Field data-invalid={!!fieldState.error}>
-                                        <FieldLabel htmlFor={field.name}>
-                                            Category
-                                        </FieldLabel>
-                                        <Select
-                                            value={field.value ?? "__none__"}
-                                            onValueChange={(v) =>
-                                                field.onChange(
-                                                    v === "__none__" ? null : v
-                                                )
-                                            }
-                                        >
-                                            <SelectTrigger id={field.name}>
-                                                <SelectValue placeholder="Select Category" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="__none__">
-                                                    Uncategorized
-                                                </SelectItem>
-                                                {categories.map((cat) => (
-                                                    <SelectItem
-                                                        key={cat.id}
-                                                        value={cat.id}
-                                                    >
-                                                        {cat.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <FieldError
-                                            errors={[fieldState.error]}
-                                        />
-                                    </Field>
-                                )}
-                            />
+                    {/* Inventory */}
+                    {shouldShowSimpleStock && (
+                        <Card className="shadow-sm border-muted/60">
+                            <CardHeader className="pb-3">
+                                <CardTitle className="text-lg">Inventory</CardTitle>
+                                <CardDescription>
+                                    Manage availability for this simple product.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <Controller
+                                        name="stock_quantity"
+                                        control={control}
+                                        render={({ field, fieldState }) => (
+                                            <Field data-invalid={!!fieldState.error}>
+                                                <FieldLabel htmlFor={field.name}>
+                                                    Stock Quantity
+                                                </FieldLabel>
+                                                <Input
+                                                    {...field}
+                                                    value={field.value ?? 0}
+                                                    onChange={(e) =>
+                                                        field.onChange(
+                                                            parseInt(e.target.value) || 0
+                                                        )
+                                                    }
+                                                    id={field.name}
+                                                    type="number"
+                                                    min={0}
+                                                />
+                                                <FieldError errors={[fieldState.error]} />
+                                            </Field>
+                                        )}
+                                    />
+                                    <Controller
+                                        name="sku"
+                                        control={control}
+                                        render={({ field, fieldState }) => (
+                                            <Field data-invalid={!!fieldState.error}>
+                                                <FieldLabel htmlFor={field.name}>
+                                                    SKU (Stock Keeping Unit)
+                                                </FieldLabel>
+                                                <Input
+                                                    {...field}
+                                                    value={field.value ?? ""}
+                                                    id={field.name}
+                                                    placeholder="Unique identifier"
+                                                />
+                                                <FieldError errors={[fieldState.error]} />
+                                            </Field>
+                                        )}
+                                    />
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
 
-                            <Controller
-                                name="sort_order"
-                                control={control}
-                                render={({ field, fieldState }) => (
-                                    <Field data-invalid={!!fieldState.error}>
-                                        <FieldLabel htmlFor={field.name}>
-                                            Sort Order
-                                        </FieldLabel>
-                                        <Input
-                                            {...field}
-                                            value={field.value ?? 0}
-                                            onChange={(e) =>
-                                                field.onChange(
-                                                    parseInt(e.target.value) ||
-                                                        0
-                                                )
-                                            }
-                                            id={field.name}
-                                            type="number"
-                                            min={0}
-                                        />
-                                    </Field>
-                                )}
-                            />
-                        </CardContent>
-                    </Card>
-
-                    {/* Shipping Card */}
+                    {/* Shipping */}
                     <Card className="shadow-sm border-muted/60">
                         <CardHeader className="pb-3">
                             <CardTitle className="text-lg">Shipping</CardTitle>
@@ -913,12 +532,8 @@ export function ProductForm({
                                 render={({ field }) => (
                                     <Field className="flex items-center justify-between">
                                         <div className="space-y-0.5">
-                                            <FieldLabel>
-                                                Digital Product
-                                            </FieldLabel>
-                                            <FieldDescription>
-                                                No physical shipping.
-                                            </FieldDescription>
+                                            <FieldLabel>Digital Product</FieldLabel>
+                                            <FieldDescription>No physical shipping required.</FieldDescription>
                                         </div>
                                         <Switch
                                             checked={field.value}
@@ -929,19 +544,13 @@ export function ProductForm({
                             />
 
                             {!watch("is_digital") && (
-                                <div className="space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <Controller
                                         name="weight_grams"
                                         control={control}
                                         render={({ field, fieldState }) => (
-                                            <Field
-                                                data-invalid={
-                                                    !!fieldState.error
-                                                }
-                                            >
-                                                <FieldLabel
-                                                    htmlFor={field.name}
-                                                >
+                                            <Field data-invalid={!!fieldState.error}>
+                                                <FieldLabel htmlFor={field.name}>
                                                     Weight (grams)
                                                 </FieldLabel>
                                                 <Input
@@ -949,9 +558,7 @@ export function ProductForm({
                                                     value={field.value ?? ""}
                                                     onChange={(e) =>
                                                         field.onChange(
-                                                            parseInt(
-                                                                e.target.value
-                                                            ) || 0
+                                                            parseInt(e.target.value) || 0
                                                         )
                                                     }
                                                     id={field.name}
@@ -960,85 +567,270 @@ export function ProductForm({
                                             </Field>
                                         )}
                                     />
-                                    <div className="grid grid-cols-3 gap-2">
-                                        <Controller
-                                            name="length_cm"
-                                            control={control}
-                                            render={({ field }) => (
-                                                <Input
-                                                    {...field}
-                                                    value={field.value ?? ""}
-                                                    placeholder="L"
-                                                    type="number"
-                                                />
-                                            )}
-                                        />
-                                        <Controller
-                                            name="width_cm"
-                                            control={control}
-                                            render={({ field }) => (
-                                                <Input
-                                                    {...field}
-                                                    value={field.value ?? ""}
-                                                    placeholder="W"
-                                                    type="number"
-                                                />
-                                            )}
-                                        />
-                                        <Controller
-                                            name="height_cm"
-                                            control={control}
-                                            render={({ field }) => (
-                                                <Input
-                                                    {...field}
-                                                    value={field.value ?? ""}
-                                                    placeholder="H"
-                                                    type="number"
-                                                />
-                                            )}
-                                        />
+                                    <div className="space-y-2">
+                                        <FieldLabel>Dimensions (L × W × H)</FieldLabel>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            <Controller
+                                                name="length_cm"
+                                                control={control}
+                                                render={({ field }) => (
+                                                    <Input {...field} value={field.value ?? ""} placeholder="L" type="number" />
+                                                )}
+                                            />
+                                            <Controller
+                                                name="width_cm"
+                                                control={control}
+                                                render={({ field }) => (
+                                                    <Input {...field} value={field.value ?? ""} placeholder="W" type="number" />
+                                                )}
+                                            />
+                                            <Controller
+                                                name="height_cm"
+                                                control={control}
+                                                render={({ field }) => (
+                                                    <Input {...field} value={field.value ?? ""} placeholder="H" type="number" />
+                                                )}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             )}
                         </CardContent>
                     </Card>
-                </div>
-            </div>
 
-            {/* ── Sticky Footer Actions ────────────────────────────────── */}
-            <div className="sticky bottom-0 z-30 bg-background/95 backdrop-blur border-t p-4 flex items-center justify-between shadow-[0_-4px_12px_rgba(0,0,0,0.05)] -mx-6 px-6 -mb-6 mt-10">
-                <div className="flex items-center gap-2">
-                    {isDirty && (
-                        <Badge
-                            variant="outline"
-                            className="animate-pulse bg-amber-50 text-amber-700 border-amber-200 gap-1 hidden sm:flex"
-                        >
-                            <span className="size-1.5 rounded-full bg-amber-500" />
-                            Unsaved Changes
-                        </Badge>
-                    )}
+                    {/* Variants */}
+                    <Card className="shadow-sm border-muted/60" id="variants">
+                        <CardHeader>
+                            <CardTitle>Variants</CardTitle>
+                            <CardDescription>
+                                Define attributes like Size or Color to create multiple variations.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            {mode === "create" ? (
+                                <VariantMatrix onVariantsGenerated={setVariantRows} />
+                            ) : (
+                                <VariantManager shopId={shopId} productId={initialData!.id} initialVariants={initialData?.variants || []} />
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    {/* Specifications */}
+                    <Card className="shadow-sm border-muted/60">
+                        <CardHeader>
+                            <CardTitle>Specifications</CardTitle>
+                            <CardDescription>
+                                Add technical details, materials, or custom key-value pairs.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Controller
+                                name="specifications"
+                                control={control}
+                                render={({ field }) => (
+                                    <SpecificationsEditor value={field.value} onChange={field.onChange} />
+                                )}
+                            />
+                        </CardContent>
+                    </Card>
+
+                    {/* SEO */}
+                    <Card className="shadow-sm border-muted/60">
+                        <CardHeader>
+                            <CardTitle>Search Engine Optimization</CardTitle>
+                            <CardDescription>
+                                Optimize how your product appears in search results.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <FieldGroup>
+                                <Controller
+                                    name="seo_title"
+                                    control={control}
+                                    render={({ field, fieldState }) => (
+                                        <Field data-invalid={!!fieldState.error}>
+                                            <FieldLabel htmlFor={field.name}>
+                                                SEO Title
+                                                <span className="ml-auto text-xs text-muted-foreground">
+                                                    {field.value?.length ?? 0} / 120
+                                                </span>
+                                            </FieldLabel>
+                                            <Input
+                                                {...field}
+                                                value={field.value ?? ""}
+                                                id={field.name}
+                                                placeholder="Leave blank to use product name"
+                                            />
+                                            <FieldError errors={[fieldState.error]} />
+                                        </Field>
+                                    )}
+                                />
+
+                                <Controller
+                                    name="seo_description"
+                                    control={control}
+                                    render={({ field, fieldState }) => (
+                                        <Field data-invalid={!!fieldState.error}>
+                                            <FieldLabel htmlFor={field.name}>
+                                                Meta Description
+                                                <span className="ml-auto text-xs text-muted-foreground">
+                                                    {field.value?.length ?? 0} / 320
+                                                </span>
+                                            </FieldLabel>
+                                            <Textarea
+                                                {...field}
+                                                value={field.value ?? ""}
+                                                id={field.name}
+                                                placeholder="Brief summary for search results..."
+                                                rows={4}
+                                            />
+                                            <FieldError errors={[fieldState.error]} />
+                                        </Field>
+                                    )}
+                                />
+
+                                <Controller
+                                    name="slug"
+                                    control={control}
+                                    render={({ field, fieldState }) => (
+                                        <Field data-invalid={!!fieldState.error}>
+                                            <FieldLabel htmlFor={field.name}>
+                                                URL Slug
+                                            </FieldLabel>
+                                            <Input
+                                                {...field}
+                                                value={field.value ?? ""}
+                                                id={field.name}
+                                                placeholder="auto-generated-from-name"
+                                            />
+                                            <FieldDescription>
+                                                The URL path for this product.
+                                            </FieldDescription>
+                                            <FieldError errors={[fieldState.error]} />
+                                        </Field>
+                                    )}
+                                />
+                            </FieldGroup>
+                        </CardContent>
+                    </Card>
                 </div>
-                <div className="flex items-center gap-3">
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={() => router.back()}
-                        className="text-muted-foreground hover:text-foreground"
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="min-w-[140px] shadow-lg shadow-primary/20"
-                    >
-                        {isSubmitting ? (
-                            <IconLoader2 className="size-4 animate-spin mr-2" />
-                        ) : (
-                            <IconDeviceFloppy className="size-4 mr-2" />
-                        )}
-                        {mode === "create" ? "Create Product" : "Save Changes"}
-                    </Button>
+
+                {/* Right column: operational settings */}
+                <div className="space-y-8">
+                    {/* Status Card */}
+                    <div className="sticky top-20 space-y-8">
+                        <Card className="shadow-sm border-l-4 border-l-primary/40">
+                            <CardHeader className="pb-3">
+                                <CardTitle className="text-lg">Publishing</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <Controller
+                                    name="status"
+                                    control={control}
+                                    render={({ field, fieldState }) => (
+                                        <Field data-invalid={!!fieldState.error}>
+                                            <FieldLabel htmlFor={field.name}>Status</FieldLabel>
+                                            <Select value={field.value} onValueChange={field.onChange}>
+                                                <SelectTrigger id={field.name} className="w-full">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="DRAFT">Draft</SelectItem>
+                                                    <SelectItem value="PUBLISHED">Published</SelectItem>
+                                                    <SelectItem value="SCHEDULED">Scheduled</SelectItem>
+                                                    <SelectItem value="ARCHIVED">Archived</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            <FieldError errors={[fieldState.error]} />
+                                        </Field>
+                                    )}
+                                />
+
+                                {watchedStatus === "SCHEDULED" && (
+                                    <Controller
+                                        name="publish_at"
+                                        control={control}
+                                        render={({ field, fieldState }) => (
+                                            <Field data-invalid={!!fieldState.error}>
+                                                <FieldLabel htmlFor={field.name}>
+                                                    Schedule For
+                                                </FieldLabel>
+                                                <Input
+                                                    {...field}
+                                                    id={field.name}
+                                                    type="datetime-local"
+                                                    value={field.value ?? ""}
+                                                />
+                                                <FieldError errors={[fieldState.error]} />
+                                            </Field>
+                                        )}
+                                    />
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        {/* Organization Card */}
+                        <Card className="shadow-sm border-muted/60">
+                            <CardHeader className="pb-3">
+                                <CardTitle className="text-lg">Organization</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <Controller
+                                    name="category_id"
+                                    control={control}
+                                    render={({ field, fieldState }) => (
+                                        <Field data-invalid={!!fieldState.error}>
+                                            <FieldLabel htmlFor={field.name}>
+                                                Category
+                                            </FieldLabel>
+                                            <Select
+                                                value={field.value ?? "__none__"}
+                                                onValueChange={(v) =>
+                                                    field.onChange(v === "__none__" ? null : v)
+                                                }
+                                            >
+                                                <SelectTrigger id={field.name}>
+                                                    <SelectValue placeholder="Select Category" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="__none__">Uncategorized</SelectItem>
+                                                    {categories.map((cat) => (
+                                                        <SelectItem key={cat.id} value={cat.id}>
+                                                            {cat.name}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            <FieldError errors={[fieldState.error]} />
+                                        </Field>
+                                    )}
+                                />
+
+                                <Controller
+                                    name="sort_order"
+                                    control={control}
+                                    render={({ field, fieldState }) => (
+                                        <Field data-invalid={!!fieldState.error}>
+                                            <FieldLabel htmlFor={field.name}>
+                                                Sort Order
+                                            </FieldLabel>
+                                            <Input
+                                                {...field}
+                                                value={field.value ?? 0}
+                                                onChange={(e) =>
+                                                    field.onChange(parseInt(e.target.value) || 0)
+                                                }
+                                                id={field.name}
+                                                type="number"
+                                                min={0}
+                                            />
+                                            <FieldError errors={[fieldState.error]} />
+                                        </Field>
+                                    )}
+                                />
+                            </CardContent>
+                        </Card>
+                    </div>
                 </div>
             </div>
         </form>

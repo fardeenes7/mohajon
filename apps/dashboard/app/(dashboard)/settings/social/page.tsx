@@ -5,10 +5,11 @@ import {
     AlertTitle
 } from "@repo/ui/components/ui/alert";
 import { IconInfoCircle } from "@tabler/icons-react";
-import { getSocialConnections } from "@/lib/api";
-import { handleSocialOAuthCallback } from "@/lib/api";
+import { getSocialConnections, getWhatsAppConfig } from "@/lib/api";
+import { handleSocialOAuthCallback, handleWhatsAppOAuthCallback } from "@/lib/api";
 import { requireActiveShopContext } from "@/lib/shop-context";
 import { SocialConnectionsPanel } from "./SocialConnectionsPanel";
+import { WhatsAppConnectionPanel } from "./WhatsAppConnectionPanel";
 import { Button } from "@repo/ui/components/ui/button";
 import {
     Card,
@@ -19,8 +20,10 @@ import {
 } from "@repo/ui/components/ui/card";
 import {
     completeSocialOAuthSelectionAction,
-    startSocialOAuthAction
+    startSocialOAuthAction,
+    completeWhatsAppOAuthSelectionAction,
 } from "./actions";
+import { ActionForm } from "./ActionForm";
 
 export const metadata: Metadata = {
     title: "Social Connections | Mohajon Dashboard"
@@ -35,20 +38,35 @@ export default async function SocialConnectionsPage({
     const params = await searchParams;
 
     let oauthStateForSelection: string | null = null;
-    let oauthPages: Array<{ id: string; name: string }> = [];
+    let oauthPages: Array<{ id: string; name: string; display_phone_number?: string }> = [];
+    let isWhatsAppAuth = false;
 
     if (params.code && params.state) {
-        const oauthRes = await handleSocialOAuthCallback(activeShop.shopId, {
-            code: params.code,
-            state: params.state
-        });
-        if (oauthRes.success) {
-            oauthStateForSelection = oauthRes.data.oauth_state ?? null;
-            oauthPages = oauthRes.data.pages ?? [];
+        isWhatsAppAuth = params.state.startsWith("wa_");
+        
+        if (isWhatsAppAuth) {
+            const oauthRes = await handleWhatsAppOAuthCallback(activeShop.shopId, {
+                code: params.code,
+                state: params.state
+            });
+            if (oauthRes.success) {
+                oauthStateForSelection = oauthRes.data.oauth_state ?? null;
+                oauthPages = oauthRes.data.pages ?? [];
+            }
+        } else {
+            const oauthRes = await handleSocialOAuthCallback(activeShop.shopId, {
+                code: params.code,
+                state: params.state
+            });
+            if (oauthRes.success) {
+                oauthStateForSelection = oauthRes.data.oauth_state ?? null;
+                oauthPages = oauthRes.data.pages ?? [];
+            }
         }
     }
 
     const connectionsRes = await getSocialConnections(activeShop.shopId);
+    const whatsappRes = await getWhatsAppConfig(activeShop.shopId);
 
     return (
         <div className="flex flex-col gap-6">
@@ -68,24 +86,26 @@ export default async function SocialConnectionsPage({
                 </AlertDescription>
             </Alert>
 
+            <WhatsAppConnectionPanel
+                shopId={activeShop.shopId}
+                config={whatsappRes.success ? whatsappRes.data : null}
+            />
+
             <Card>
                 <CardHeader>
-                    <CardTitle>OAuth Connect</CardTitle>
+                    <CardTitle>Facebook Connect</CardTitle>
                     <CardDescription>
-                        Connect Meta via OAuth and choose a managed page.
+                        Connect Meta via OAuth and choose a managed page for Product Publishing.
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-4">
-                    <form action={startSocialOAuthAction}>
-                        <input
-                            type="hidden"
-                            name="shopId"
-                            value={activeShop.shopId}
-                        />
-                        <Button type="submit">Connect with Meta OAuth</Button>
-                    </form>
+                    <ActionForm 
+                        action={startSocialOAuthAction} 
+                        shopId={activeShop.shopId} 
+                        buttonText="Connect with Meta OAuth" 
+                    />
 
-                    {oauthStateForSelection && oauthPages.length > 0 ? (
+                    {oauthStateForSelection && oauthPages.length > 0 && !isWhatsAppAuth ? (
                         <form
                             action={completeSocialOAuthSelectionAction}
                             className="flex items-center gap-3"
@@ -120,6 +140,42 @@ export default async function SocialConnectionsPage({
                             </Button>
                         </form>
                     ) : null}
+                    
+                    {oauthStateForSelection && oauthPages.length > 0 && isWhatsAppAuth ? (
+                        <form
+                            action={completeWhatsAppOAuthSelectionAction}
+                            className="flex items-center gap-3"
+                        >
+                            <input
+                                type="hidden"
+                                name="shopId"
+                                value={activeShop.shopId}
+                            />
+                            <input
+                                type="hidden"
+                                name="oauthState"
+                                value={oauthStateForSelection}
+                            />
+                            <select
+                                name="selectedPhoneId"
+                                required
+                                className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                                defaultValue=""
+                            >
+                                <option value="" disabled>
+                                    Select WhatsApp Number
+                                </option>
+                                {oauthPages.map((page) => (
+                                    <option key={page.id} value={page.id}>
+                                        {page.display_phone_number} ({page.name})
+                                    </option>
+                                ))}
+                            </select>
+                            <Button type="submit" variant="outline">
+                                Save WhatsApp Number
+                            </Button>
+                        </form>
+                    ) : null}
                 </CardContent>
             </Card>
 
@@ -132,3 +188,4 @@ export default async function SocialConnectionsPage({
         </div>
     );
 }
+
