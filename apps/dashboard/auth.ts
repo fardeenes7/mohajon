@@ -67,7 +67,67 @@ async function refreshAccessToken(token: JWT) {
     }
 }
 
+const useSecureCookies = process.env.NODE_ENV === "production";
+const cookiePrefix = useSecureCookies ? "__Secure-" : "";
+
 const result = NextAuth({
+    cookies: {
+        sessionToken: {
+            name: `${cookiePrefix}dashboard.session-token`,
+            options: {
+                httpOnly: true,
+                sameSite: "lax",
+                path: "/",
+                secure: useSecureCookies,
+            },
+        },
+        callbackUrl: {
+            name: `${cookiePrefix}dashboard.callback-url`,
+            options: {
+                sameSite: "lax",
+                path: "/",
+                secure: useSecureCookies,
+            },
+        },
+        csrfToken: {
+            name: `${cookiePrefix}dashboard.csrf-token`,
+            options: {
+                httpOnly: true,
+                sameSite: "lax",
+                path: "/",
+                secure: useSecureCookies,
+            },
+        },
+        pkceCodeVerifier: {
+            name: `${cookiePrefix}dashboard.pkce.code_verifier`,
+            options: {
+                httpOnly: true,
+                sameSite: "lax",
+                path: "/",
+                secure: useSecureCookies,
+                maxAge: 900,
+            },
+        },
+        state: {
+            name: `${cookiePrefix}dashboard.state`,
+            options: {
+                httpOnly: true,
+                sameSite: "lax",
+                path: "/",
+                secure: useSecureCookies,
+                maxAge: 900,
+            },
+        },
+        nonce: {
+            name: `${cookiePrefix}dashboard.nonce`,
+            options: {
+                httpOnly: true,
+                sameSite: "lax",
+                path: "/",
+                secure: useSecureCookies,
+            },
+        },
+    },
     providers: [
         Google({
             clientId: process.env.AUTH_GOOGLE_ID,
@@ -92,26 +152,21 @@ const result = NextAuth({
             // 1. Initial sign-in: Exchange Google token for Django JWT
             if (account?.provider === "google" && account.access_token) {
                 try {
-                    const baseUrl =
-                        process.env.API_BASE_URL || "http://localhost:8000";
-                    console.log(
-                        `Connecting to Django at: ${baseUrl}/api/v1/auth/google/`
-                    );
+                    const baseUrl = process.env.API_BASE_URL || "http://localhost:8000";
 
                     const response = await fetch(
                         `${baseUrl}/api/v1/auth/google/`,
                         {
                             method: "POST",
-                            body: JSON.stringify({
-                                access_token: account.access_token
-                            }),
+                            body: JSON.stringify({ access_token: account.access_token }),
                             headers: { "Content-Type": "application/json" }
                         }
                     );
 
+                    const responseText = await response.text();
+
                     if (response.ok) {
-                        const data = await response.json();
-                        console.log("Django Auth Success");
+                        const data = JSON.parse(responseText);
 
                         return {
                             ...token,
@@ -122,12 +177,7 @@ const result = NextAuth({
                             accessTokenExpires: Date.now() + 24 * 60 * 60 * 1000
                         };
                     } else {
-                        const errorText = await response.text();
-                        console.error(
-                            "Django Auth Failed:",
-                            response.status,
-                            errorText
-                        );
+                        console.error("Django Auth Failed:", response.status, responseText);
                         token.error = "DjangoAuthError";
                     }
                 } catch (error) {
