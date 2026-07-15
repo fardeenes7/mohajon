@@ -11,6 +11,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@repo/ui/components/ui/dialog";
+import { generateProductAiDescription } from "@/lib/api";
 import { Button } from "@repo/ui/components/ui/button";
 import { Label } from "@repo/ui/components/ui/label";
 import {
@@ -49,24 +50,15 @@ export function ProductAIPrompter({
     setPreview("");
     
     try {
-      // We use the new endpoint
-      const res = await fetch(`/api/proxy/catalog/products/ai-generate-description/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Tenant-ID": shopId,
-        },
-        body: JSON.stringify({
-          name: productName,
-          specifications,
-          tone,
-        }),
+      const res = await generateProductAiDescription(shopId, {
+        name: productName,
+        specifications,
+        tone,
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || "Generation failed");
+      if (!res.success) throw new Error(res.error || "Generation failed");
 
-      setPreview(data.description);
+      setPreview(res.data.description);
       toast.success("AI Description generated!");
     } catch (error: any) {
       toast.error(error.message);

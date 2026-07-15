@@ -11,6 +11,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@repo/ui/components/ui/dialog";
+import { generateProductAiImage } from "@/lib/api";
 import { Button } from "@repo/ui/components/ui/button";
 import { Textarea } from "@repo/ui/components/ui/textarea";
 import { Label } from "@repo/ui/components/ui/label";
@@ -42,20 +43,12 @@ export function ProductAIImageGen({
     setPreviewUrl("");
     
     try {
-      const res = await fetch(`/api/proxy/catalog/products/ai-generate-image/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Tenant-ID": shopId,
-        },
-        body: JSON.stringify({ prompt }),
-      });
+      const res = await generateProductAiImage(shopId, { prompt });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || "Generation failed");
+      if (!res.success) throw new Error(res.error || "Generation failed");
 
-      setPreviewUrl(data.cdn_url);
-      setGeneratedMediaId(data.media.id);
+      setPreviewUrl(res.data.cdn_url);
+      setGeneratedMediaId(res.data.media.id);
       toast.success("AI Image generated and saved!");
     } catch (error: any) {
       toast.error(error.message);

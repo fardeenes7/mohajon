@@ -211,6 +211,22 @@ export async function archiveProduct(shopId: string, productId: string) {
     return res;
 }
 
+export async function generateProductAiDescription(shopId: string, data: any) {
+    return authFetcher("/api/v1/catalog/products/ai-generate-description/", {
+        method: "POST",
+        body: data,
+        headers: { "X-Tenant-ID": shopId },
+    });
+}
+
+export async function generateProductAiImage(shopId: string, data: any) {
+    return authFetcher("/api/v1/catalog/products/ai-generate-image/", {
+        method: "POST",
+        body: data,
+        headers: { "X-Tenant-ID": shopId },
+    });
+}
+
 // ─── Media API ───────────────────────────────────────────────────────────────
 
 export async function getPresignedUploadUrl(
@@ -314,16 +330,19 @@ export async function publishProductToSocial(shopId: string, data: any) {
 // ─── Shop & Settings API ─────────────────────────────────────────────────────
 
 export async function updateTrackingConfig(shopId: string, data: any) {
-    const res = await authFetcher(`/api/v1/shops/${shopId}/tracking/`, {
+    const res = await authFetcher(`/api/v1/shops/tracking/`, {
         method: "PATCH",
         body: data,
+        headers: { "X-Tenant-ID": shopId },
     });
     if (res.success) revalidatePath("/settings/tracking");
     return res;
 }
 
 export async function getTrackingConfig(shopId: string) {
-    return authFetcher(`/api/v1/shops/${shopId}/tracking/`);
+    return authFetcher(`/api/v1/shops/tracking/`, {
+        headers: { "X-Tenant-ID": shopId },
+    });
 }
 
 export async function getStoreTheme() {
@@ -599,6 +618,105 @@ export async function checkCustomerRisk(shopId: string, phoneNumber: string) {
     return authFetcher("/api/v1/fraud/check_risk/", {
         method: "POST",
         body: { phone_number: phoneNumber },
+        headers: { "X-Tenant-ID": shopId },
+    });
+}
+
+// ─── Chat API ────────────────────────────────────────────────────────────────
+
+export async function getInboxList(shopId: string) {
+    return authFetcher("/api/v1/chat/inbox/", {
+        headers: { "X-Tenant-ID": shopId },
+    });
+}
+
+export async function getInboxDetail(shopId: string, psid: string) {
+    return authFetcher(`/api/v1/chat/inbox/${psid}/`, {
+        headers: { "X-Tenant-ID": shopId },
+    });
+}
+
+export async function humanTakeover(shopId: string, pageId: string, psid: string, action: "takeover" | "handback") {
+    return authFetcher("/api/v1/chat/takeover/", {
+        method: "POST",
+        body: { page_id: pageId, psid, action },
+        headers: { "X-Tenant-ID": shopId },
+    });
+}
+
+export async function agentSend(shopId: string, pageId: string, psid: string, text: string) {
+    return authFetcher("/api/v1/chat/send/", {
+        method: "POST",
+        body: { page_id: pageId, psid, text },
+        headers: { "X-Tenant-ID": shopId },
+    });
+}
+
+export async function getFaqList(shopId: string) {
+    return authFetcher("/api/v1/chat/faq/", {
+        headers: { "X-Tenant-ID": shopId },
+    });
+}
+
+export async function createFaq(shopId: string, payload: any) {
+    const res = await authFetcher("/api/v1/chat/faq/", {
+        method: "POST",
+        body: payload,
+        headers: { "X-Tenant-ID": shopId },
+    });
+    if (res.success) revalidatePath("/settings/faq");
+    return res;
+}
+
+export async function updateFaq(shopId: string, id: string, payload: any) {
+    const res = await authFetcher(`/api/v1/chat/faq/${id}/`, {
+        method: "PUT",
+        body: payload,
+        headers: { "X-Tenant-ID": shopId },
+    });
+    if (res.success) revalidatePath("/settings/faq");
+    return res;
+}
+
+export async function deleteFaq(shopId: string, id: string) {
+    const res = await authFetcher(`/api/v1/chat/faq/${id}/`, {
+        method: "DELETE",
+        headers: { "X-Tenant-ID": shopId },
+    });
+    if (res.success) revalidatePath("/settings/faq");
+    return res;
+}
+
+export async function adjustStock(
+    shopId: string,
+    productId: string,
+    variantId: string,
+    delta: number,
+    reason: string,
+    referenceId?: string
+) {
+    return authFetcher(
+        `/api/v1/catalog/products/${productId}/variants/${variantId}/adjust-stock/`,
+        {
+            method: "POST",
+            headers: {
+                "X-Tenant-ID": shopId,
+            },
+            body: { delta, reason, reference_id: referenceId || "" },
+        }
+    );
+}
+
+// ─── AI API ──────────────────────────────────────────────────────────────────
+
+export async function getShopSettings(shopId: string) {
+    return authFetcher("/api/v1/shops/settings/", {
+        headers: { "X-Tenant-ID": shopId },
+    });
+}
+
+export async function getAiUsageLog(shopId: string) {
+    return authFetcher("/api/v1/billing/ai-usage/", {
         headers: { "X-Tenant-ID": shopId },
     });
 }

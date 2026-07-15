@@ -47,6 +47,7 @@ import {
 import { RichTextEditor } from "./RichTextEditor";
 import { ImageUploader } from "./ImageUploader";
 import { VariantMatrix } from "./VariantMatrix";
+import { VariantManager } from "./VariantManager";
 import { ProductAIPrompter } from "./ProductAIPrompter";
 import { ProductAIImageGen } from "./ProductAIImageGen";
 import { SpecificationsEditor } from "./SpecificationsEditor";
@@ -426,12 +427,11 @@ export function ProductForm({
                                             onVariantsGenerated={setVariantRows}
                                         />
                                     ) : (
-                                        <div className="p-12 text-center border-2 border-dashed rounded-xl bg-muted/30">
-                                            <p className="text-muted-foreground">
-                                                Variants are managed after
-                                                product creation.
-                                            </p>
-                                        </div>
+                                        <VariantManager
+                                            shopId={shopId}
+                                            productId={initialData!.id}
+                                            initialVariants={initialData?.variants || []}
+                                        />
                                     )}
                                 </CardContent>
                             </Card>
