@@ -10,9 +10,9 @@ import {
     TableHeader, 
     TableRow 
 } from "@repo/ui/components/ui/table";
-import { IconEye, IconFilter, IconSearch } from "@tabler/icons-react";
+import { IconEye } from "@tabler/icons-react";
 import Link from "next/link";
-import { Input } from "@repo/ui/components/ui/input";
+import { OrdersToolbar } from "./OrdersToolbar";
 
 export default async function OrdersPage({
     searchParams,
@@ -45,22 +45,13 @@ export default async function OrdersPage({
                     <p className="text-muted-foreground">Manage and track your customer orders.</p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" className="gap-2">
-                        <IconFilter className="size-4" />
-                        Filter
-                    </Button>
                     <Button size="sm" asChild>
                         <Link href="/pos">Create Order</Link>
                     </Button>
                 </div>
             </div>
 
-            <div className="flex items-center gap-2">
-                <div className="relative flex-1 max-w-sm">
-                    <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                    <Input placeholder="Search orders..." className="pl-9" />
-                </div>
-            </div>
+            <OrdersToolbar />
 
             <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
                 <Table>

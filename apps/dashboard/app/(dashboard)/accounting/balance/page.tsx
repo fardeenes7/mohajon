@@ -1,15 +1,14 @@
 import { requireActiveShopContext } from "@/lib/shop-context";
-import { getMerchantBalance, getMerchantLedger } from "@/lib/api";
+import { getMerchantBalance, getMerchantLedger, getMerchantPayouts } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/components/ui/card";
 import { Badge } from "@repo/ui/components/ui/badge";
-import { Button } from "@repo/ui/components/ui/button";
-import { 
-    IconWallet, 
-    IconArrowUpRight, 
-    IconHistory, 
-    IconCurrencyTaka,
-    IconClock
+import {
+    IconWallet,
+    IconHistory,
+    IconClock,
+    IconCash
 } from "@tabler/icons-react";
+import { RequestPayoutDialog } from "./RequestPayoutDialog";
 import { 
     Table, 
     TableBody, 
@@ -21,8 +20,11 @@ import {
 
 export default async function BalancePage() {
     const context = await requireActiveShopContext();
-    const balanceRes = await getMerchantBalance(context.shopId);
-    const ledgerRes = await getMerchantLedger(context.shopId);
+    const [balanceRes, ledgerRes, payoutsRes] = await Promise.all([
+        getMerchantBalance(context.shopId),
+        getMerchantLedger(context.shopId),
+        getMerchantPayouts(context.shopId),
+    ]);
 
     const balance = balanceRes.success ? balanceRes.data : {
         current_balance: "0.00",
@@ -31,6 +33,7 @@ export default async function BalancePage() {
     };
 
     const ledger = ledgerRes.success ? ledgerRes.data.results : [];
+    const payouts = payoutsRes.success ? payoutsRes.data.results : [];
 
     const getEntryTypeVariant = (type: string): "success" | "destructive" | "warning" | "secondary" | "outline" => {
         switch (type) {
@@ -42,6 +45,24 @@ export default async function BalancePage() {
         }
     };
 
+    const getPayoutStatusVariant = (status: string): "success" | "destructive" | "warning" | "info" | "outline" => {
+        switch (status) {
+            case "PAID": return "success";
+            case "PROCESSING": return "info";
+            case "PENDING": return "warning";
+            case "FAILED":
+            case "REVERSED": return "destructive";
+            default: return "outline";
+        }
+    };
+
+    const formatBankInfo = (info: any): string => {
+        if (!info || typeof info !== "object") return "—";
+        const method = info.method || info.type || info.provider;
+        const account = info.account_number || info.account || info.number;
+        return [method, account].filter(Boolean).join(" · ") || "—";
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -49,10 +70,11 @@ export default async function BalancePage() {
                     <h1 className="text-2xl font-bold tracking-tight">Financial Balance</h1>
                     <p className="text-muted-foreground">Track your earnings, payouts, and ledger history.</p>
                 </div>
-                <Button className="gap-2">
-                    <IconArrowUpRight className="size-4" />
-                    Request Payout
-                </Button>
+                <RequestPayoutDialog
+                    shopId={context.shopId}
+                    availableBalance={balance.current_balance}
+                    currency={context.baseCurrency}
+                />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -93,6 +115,59 @@ export default async function BalancePage() {
                     </CardContent>
                 </Card>
             </div>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                        <IconCash className="size-5" />
+                        Payout History
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="pl-6">Amount</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead>Method</TableHead>
+                                <TableHead>Requested</TableHead>
+                                <TableHead className="pr-6 text-right">Paid</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {payouts && payouts.length > 0 ? (
+                                payouts.map((payout: any) => (
+                                    <TableRow key={payout.id}>
+                                        <TableCell className="pl-6 font-medium">
+                                            {payout.amount} {context.baseCurrency}
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge variant={getPayoutStatusVariant(payout.status)}>
+                                                {payout.status}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell className="text-sm text-muted-foreground">
+                                            {formatBankInfo(payout.bank_info)}
+                                        </TableCell>
+                                        <TableCell className="text-xs text-muted-foreground">
+                                            {new Date(payout.created_at).toLocaleString()}
+                                        </TableCell>
+                                        <TableCell className="pr-6 text-right text-xs text-muted-foreground">
+                                            {payout.paid_at ? new Date(payout.paid_at).toLocaleString() : "—"}
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                                        No payout requests yet.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
 
             <Card>
                 <CardHeader>

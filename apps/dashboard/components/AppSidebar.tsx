@@ -18,7 +18,13 @@ import {
     IconShieldLock,
     IconShoppingCart,
     IconTags,
-    IconDeviceIpadHorizontal
+    IconDeviceIpadHorizontal,
+    IconPhoto,
+    IconSpeakerphone,
+    IconUsers,
+    IconUserCircle,
+    IconAddressBook,
+    IconHistory
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -43,14 +49,16 @@ const sidebarGroups = [
         items: [
             { title: "Overview", href: "/", icon: IconDashboard },
             { title: "Orders", href: "/orders", icon: IconShoppingCart },
-            { title: "Inbox", href: "/inbox", icon: IconMessage }
+            { title: "Inbox", href: "/inbox", icon: IconMessage },
+            { title: "Customers", href: "/customers", icon: IconAddressBook }
         ]
     },
     {
         label: "Catalog",
         items: [
             { title: "Products", href: "/products", icon: IconTags },
-            { title: "Categories", href: "/categories", icon: IconCategory }
+            { title: "Categories", href: "/categories", icon: IconCategory },
+            { title: "Media Library", href: "/media", icon: IconPhoto }
         ]
     },
     {
@@ -64,7 +72,8 @@ const sidebarGroups = [
         label: "Analytics & Growth",
         items: [
             { title: "Advanced Analytics", href: "/analytics", icon: IconChartBar },
-            { title: "Affiliate Program", href: "/affiliates", icon: IconAffiliate }
+            { title: "Affiliate Program", href: "/affiliates", icon: IconAffiliate },
+            { title: "Marketing / Ads", href: "/marketing/ads", icon: IconSpeakerphone }
         ]
     },
     {
@@ -77,6 +86,8 @@ const sidebarGroups = [
     {
         label: "Configuration",
         items: [
+            { title: "Shop Profile", href: "/settings/profile", icon: IconUserCircle },
+            { title: "Team & Roles", href: "/settings/team", icon: IconUsers },
             { title: "Social Connections", href: "/settings/social", icon: IconPlugConnected },
             { title: "Tracking & Pixels", href: "/settings/tracking", icon: IconBrandFacebook },
             { title: "FAQ & Policies", href: "/settings/faq", icon: IconMessageQuestion },
@@ -86,6 +97,7 @@ const sidebarGroups = [
             { title: "Payments", href: "/settings/payments", icon: IconCreditCard },
             { title: "Developer API", href: "/settings/api", icon: IconPlugConnected },
             { title: "Fraud Protection", href: "/settings/fraud", icon: IconShieldLock },
+            { title: "Activity Logs", href: "/compliance/logs", icon: IconHistory },
             { title: "Settings", href: "/settings", icon: IconSettings }
         ]
     }

@@ -1,84 +1,83 @@
-"use client";
-
 import { Card, CardContent } from "@repo/ui/components/ui/card";
-import { Badge } from "@repo/ui/components/ui/badge";
-import { Box, ChartColumnIncreasing, Handbag, Star } from "lucide-react";
-import { cn } from "@repo/ui/lib/utils";
+import {
+    IconShoppingCart,
+    IconCash,
+    IconAlertTriangle,
+    IconMessage,
+    IconSparkles,
+} from "@tabler/icons-react";
 
-export default function Statistic() {
-    const EcommerceActions = [
+export type DashboardMetrics = {
+    total_orders: number;
+    total_revenue: number;
+    low_stock_count: number;
+    unread_inbox_count: number;
+    ai_credits: number;
+};
+
+function formatCurrency(value: number, currency: string) {
+    return `${new Intl.NumberFormat("en-US", {
+        maximumFractionDigits: 0,
+    }).format(value)} ${currency}`;
+}
+
+export default function Statistic({
+    metrics,
+    currency,
+}: {
+    metrics: DashboardMetrics;
+    currency: string;
+}) {
+    const cards = [
         {
             title: "Orders",
-            subtitle: "5868",
-            cardIcon: Handbag,
-            badgeColor: "bg-teal-400/10",
-            statusValue: "+18%"
+            value: metrics.total_orders.toLocaleString(),
+            icon: IconShoppingCart,
         },
         {
-            title: "Sales",
-            subtitle: "$96,850",
-            cardIcon: Box,
-            badgeColor: "bg-orange-400/10",
-            statusValue: "-5%"
+            title: "Revenue",
+            value: formatCurrency(metrics.total_revenue, currency),
+            icon: IconCash,
         },
         {
-            title: "Profit",
-            subtitle: "$82,906",
-            cardIcon: ChartColumnIncreasing,
-            badgeColor: "bg-teal-400/10",
-            statusValue: "+18%"
+            title: "Low Stock",
+            value: metrics.low_stock_count.toLocaleString(),
+            icon: IconAlertTriangle,
         },
         {
-            title: "Expense",
-            subtitle: "$14,653",
-            cardIcon: Star,
-            badgeColor: "bg-teal-400/10",
-            statusValue: "+18%"
-        }
+            title: "Unread Inbox",
+            value: metrics.unread_inbox_count.toLocaleString(),
+            icon: IconMessage,
+        },
+        {
+            title: "AI Credits",
+            value: metrics.ai_credits.toLocaleString(),
+            icon: IconSparkles,
+        },
     ];
 
     return (
-        <Card className="p-0 shadow-xs">
-            <CardContent className="flex items-center w-full lg:flex-nowrap flex-wrap px-0">
-                {EcommerceActions.map((item, index) => {
-                    return (
-                        <div
-                            className="lg:w-3/12 md:w-6/12 w-full border-border border-b last:border-b-0 md:border-e md:even:border-e-0 md:nth-[n+3]:border-b-0 lg:border-b-0 lg:even:border-e lg:last:border-e-0"
-                            key={index}
-                        >
-                            <div className="p-6 flex items-start justify-between">
-                                <div className="flex flex-col gap-4">
-                                    <p className="text-base font-medium text-card-foreground">
-                                        {item.title}
-                                    </p>
-                                    <div>
-                                        <p className="text-2xl font-medium text-card-foreground">
-                                            {item.subtitle}
-                                        </p>
-                                        <div className="flex items-center gap-2">
-                                            <p className="text-xs text-muted-foreground">
-                                                Last 7 days
-                                            </p>
-                                            <Badge
-                                                className={cn(
-                                                    "font-normal text-muted-foreground",
-                                                    item.badgeColor
-                                                )}
-                                            >
-                                                {item.statusValue}
-                                            </Badge>
-                                        </div>
-                                    </div>
-                                </div>
-                                {/* icon */}
-                                <div className="p-3 rounded-full outline">
-                                    <item.cardIcon size={16} />
-                                </div>
-                            </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+            {cards.map((card) => (
+                <Card key={card.title}>
+                    <CardContent className="flex items-start justify-between gap-4 p-6">
+                        <div className="flex flex-col gap-2">
+                            <p className="text-sm font-medium text-muted-foreground">
+                                {card.title}
+                            </p>
+                            <p className="text-2xl font-semibold tracking-tight tabular-nums">
+                                {card.value}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                                Last 30 days
+                            </p>
                         </div>
-                    );
-                })}
-            </CardContent>
-        </Card>
+                        <div className="flex size-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                            <card.icon size={18} />
+                        </div>
+                    </CardContent>
+                </Card>
+            ))}
+        </div>
     );
 }

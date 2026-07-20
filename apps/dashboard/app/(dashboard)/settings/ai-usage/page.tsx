@@ -1,6 +1,6 @@
 import { Suspense } from "react";
-import { getActiveShopContext, getShopSettings, getAiUsageLog } from "@/lib/api";
-import { AiUsageClient } from "./AiUsageClient";
+import { getActiveShopContext, getShopSettings, getAiUsageLog, finalizeTopUp } from "@/lib/api";
+import { AiUsageClient, type TopUpResult } from "./AiUsageClient";
 import { SidebarTrigger } from "@repo/ui/components/ui/sidebar";
 import { Separator } from "@repo/ui/components/ui/separator";
 
@@ -8,10 +8,25 @@ export const metadata = {
     title: "AI Usage & Credits - Dashboard",
 };
 
-export default async function AiUsagePage() {
+export default async function AiUsagePage({
+    searchParams,
+}: {
+    searchParams: Promise<{ paymentID?: string; status?: string }>;
+}) {
     const shopRes = await getActiveShopContext();
     if (!shopRes.success) return <div>Failed to load shop context</div>;
     const shopId = shopRes.data.id;
+
+    // Handle the bKash callback: after payment, bKash redirects back here with
+    // paymentID + status. Finalize the top-up server-side, then report the result.
+    const params = await searchParams;
+    let topUpResult: TopUpResult = null;
+    if (params.paymentID && params.status === "success") {
+        const res = await finalizeTopUp(shopId, params.paymentID);
+        topUpResult = res.success ? { status: "success" } : { status: "error", message: res.error };
+    } else if (params.status === "cancel" || params.status === "failure") {
+        topUpResult = { status: "cancelled" };
+    }
 
     const [settingsRes, usageRes] = await Promise.all([
         getShopSettings(shopId),
@@ -34,7 +49,12 @@ export default async function AiUsagePage() {
             </div>
 
             <Suspense fallback={<div>Loading AI usage...</div>}>
-                <AiUsageClient shopId={shopId} initialCreditBalance={creditBalance} initialUsageLogs={usageLogs} />
+                <AiUsageClient
+                    shopId={shopId}
+                    initialCreditBalance={creditBalance}
+                    initialUsageLogs={usageLogs}
+                    topUpResult={topUpResult}
+                />
             </Suspense>
         </div>
     );

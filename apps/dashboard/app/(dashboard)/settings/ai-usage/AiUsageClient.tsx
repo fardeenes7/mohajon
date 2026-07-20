@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@repo/ui/components/ui/card";
 import {
     Table,
@@ -11,22 +12,53 @@ import {
     TableRow,
 } from "@repo/ui/components/ui/table";
 import { Badge } from "@repo/ui/components/ui/badge";
+import { toast } from "sonner";
+import { BuyCreditsDialog } from "./BuyCreditsDialog";
+
+export type TopUpResult =
+    | { status: "success" }
+    | { status: "error"; message?: string }
+    | { status: "cancelled" }
+    | null;
 
 interface AiUsageClientProps {
     shopId: string;
     initialCreditBalance: number;
     initialUsageLogs: any[];
+    topUpResult?: TopUpResult;
 }
 
-export function AiUsageClient({ shopId, initialCreditBalance, initialUsageLogs }: AiUsageClientProps) {
+export function AiUsageClient({ shopId, initialCreditBalance, initialUsageLogs, topUpResult }: AiUsageClientProps) {
     const [logs] = useState<any[]>(initialUsageLogs || []);
+    const router = useRouter();
+    const pathname = usePathname();
+    const handledResult = useRef(false);
+
+    useEffect(() => {
+        if (!topUpResult || handledResult.current) return;
+        handledResult.current = true;
+
+        if (topUpResult.status === "success") {
+            toast.success("Credits added to your balance.");
+        } else if (topUpResult.status === "cancelled") {
+            toast.info("Payment cancelled. No credits were purchased.");
+        } else {
+            toast.error(topUpResult.message || "Payment failed. Please try again.");
+        }
+
+        // Strip the bKash callback params so a refresh doesn't re-toast.
+        router.replace(pathname);
+    }, [topUpResult, router, pathname]);
 
     return (
         <div className="space-y-6">
             <Card className="shadow-sm">
-                <CardHeader>
-                    <CardTitle>Current AI Credits</CardTitle>
-                    <CardDescription>Your available credit balance for AI features.</CardDescription>
+                <CardHeader className="flex flex-row items-start justify-between gap-4">
+                    <div className="space-y-1.5">
+                        <CardTitle>Current AI Credits</CardTitle>
+                        <CardDescription>Your available credit balance for AI features.</CardDescription>
+                    </div>
+                    <BuyCreditsDialog shopId={shopId} />
                 </CardHeader>
                 <CardContent>
                     <div className="text-4xl font-bold">{parseFloat(initialCreditBalance.toString()).toFixed(2)}</div>

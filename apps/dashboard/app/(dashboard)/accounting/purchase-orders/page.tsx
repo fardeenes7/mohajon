@@ -8,20 +8,15 @@ import {
 } from "@repo/ui/components/ui/card";
 import { Button } from "@repo/ui/components/ui/button";
 import { Badge } from "@repo/ui/components/ui/badge";
-import { 
-    IconBox, 
-    IconPlus, 
+import {
+    IconBox,
+    IconPlus,
     IconTruckDelivery,
-    IconDotsVertical,
     IconCalendar,
     IconCurrencyTaka
 } from "@tabler/icons-react";
-import { 
-    DropdownMenu, 
-    DropdownMenuContent, 
-    DropdownMenuItem, 
-    DropdownMenuTrigger 
-} from "@repo/ui/components/ui/dropdown-menu";
+import { CreatePurchaseOrderDialog } from "./CreatePurchaseOrderDialog";
+import { PurchaseOrderActions } from "./PurchaseOrderActions";
 
 export default async function PurchaseOrdersPage() {
     const context = await requireActiveShopContext();
@@ -46,10 +41,10 @@ export default async function PurchaseOrdersPage() {
                     <h1 className="text-2xl font-bold tracking-tight">Purchase Orders</h1>
                     <p className="text-muted-foreground">Manage inventory acquisitions and track stock costs.</p>
                 </div>
-                <Button className="gap-2">
-                    <IconPlus className="size-4" />
-                    Create Purchase Order
-                </Button>
+                <CreatePurchaseOrderDialog
+                    shopId={context.shopId}
+                    currency={context.baseCurrency}
+                />
             </header>
 
             <div className="grid gap-6">
@@ -78,21 +73,11 @@ export default async function PurchaseOrdersPage() {
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <Badge variant={getStatusVariant(po.status)}>{po.status}</Badge>
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="size-8">
-                                                    <IconDotsVertical className="size-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                                <DropdownMenuItem>View Details</DropdownMenuItem>
-                                                {po.status === "ORDERED" && <DropdownMenuItem>Mark as Received</DropdownMenuItem>}
-                                                <DropdownMenuItem>Download PDF</DropdownMenuItem>
-                                                {["DRAFT", "ORDERED"].includes(po.status) && (
-                                                    <DropdownMenuItem className="text-destructive">Cancel PO</DropdownMenuItem>
-                                                )}
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
+                                        <PurchaseOrderActions
+                                            shopId={context.shopId}
+                                            poId={po.id}
+                                            status={po.status}
+                                        />
                                     </div>
                                 </div>
                             </CardHeader>
@@ -120,10 +105,16 @@ export default async function PurchaseOrdersPage() {
                         <p className="text-muted-foreground max-w-xs mx-auto mt-1">
                             You haven't created any purchase orders yet. Start by adding your first supplier order.
                         </p>
-                        <Button variant="outline" className="mt-6 gap-2">
-                            <IconPlus className="size-4" />
-                            Create PO
-                        </Button>
+                        <CreatePurchaseOrderDialog
+                            shopId={context.shopId}
+                            currency={context.baseCurrency}
+                            trigger={
+                                <Button variant="outline" className="mt-6 gap-2">
+                                    <IconPlus className="size-4" />
+                                    Create PO
+                                </Button>
+                            }
+                        />
                     </Card>
                 )}
             </div>

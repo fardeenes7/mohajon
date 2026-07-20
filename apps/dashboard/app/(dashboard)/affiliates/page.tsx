@@ -7,13 +7,12 @@ import {
     CardTitle
 } from "@repo/ui/components/ui/card";
 import { requireActiveShopContext } from "@/lib/shop-context";
-import { Button } from "@repo/ui/components/ui/button";
-import { IconCopy, IconExternalLink } from "@tabler/icons-react";
+import { CopyLinkButton } from "./CopyLinkButton";
 
 export default async function AffiliatePage() {
     const context = await requireActiveShopContext();
     const shopId = context.shopId;
-    const subdomain = context.shopId; // TODO: Add subdomain to context if needed
+    const subdomain = context.shop.subdomain;
 
     const statsRes = await getAffiliateStats(shopId);
     const stats = statsRes.data || {
@@ -101,9 +100,7 @@ export default async function AffiliatePage() {
                         <code className="flex-1 bg-muted p-2 rounded text-sm break-all">
                             {affiliateLink}
                         </code>
-                        <Button size="icon" variant="outline">
-                            <IconCopy size={16} />
-                        </Button>
+                        <CopyLinkButton value={affiliateLink} />
                     </div>
                     <div className="text-xs text-muted-foreground">
                         When a merchant signs up via this link, you'll see them

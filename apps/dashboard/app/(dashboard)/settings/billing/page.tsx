@@ -1,11 +1,27 @@
 import { requireActiveShopContext } from "@/lib/shop-context";
+import { getProducts, getShopTeam } from "@/lib/api";
 import { Button } from "@repo/ui/components/ui/button";
 import { IconCheck, IconCrown, IconRocket, IconStar } from "@tabler/icons-react";
 import { Badge } from "@repo/ui/components/ui/badge";
+import { Progress } from "@repo/ui/components/ui/progress";
+
+function usagePercent(used: number, limit: number) {
+    if (!limit || limit >= 999999) return 0;
+    return Math.min(100, Math.round((used / limit) * 100));
+}
 
 export default async function BillingPage() {
     const context = await requireActiveShopContext();
     const { subscription } = context;
+
+    const [productsRes, teamRes] = await Promise.all([
+        getProducts(context.shopId, { page: 1, page_size: 1 }),
+        getShopTeam(context.shopId),
+    ]);
+
+    const productCount = productsRes.success ? productsRes.data.count ?? 0 : 0;
+    const staffCount =
+        teamRes.success && Array.isArray(teamRes.data) ? teamRes.data.length : 0;
 
     const plans = [
         {
@@ -72,7 +88,7 @@ export default async function BillingPage() {
                             <ul className="mb-8 space-y-2 text-sm flex-1">
                                 {plan.features.map((feature) => (
                                     <li key={feature} className="flex items-center gap-2">
-                                        <IconCheck className="size-4 text-green-500" />
+                                        <IconCheck className="size-4 text-primary" />
                                         <span>{feature}</span>
                                     </li>
                                 ))}
@@ -96,30 +112,34 @@ export default async function BillingPage() {
                         <div>
                             <div className="mb-2 flex justify-between text-sm">
                                 <span>Products</span>
-                                <span className="font-medium">
-                                    {subscription.limits.max_products === 999999 ? "Unlimited" : `5 / ${subscription.limits.max_products}`}
+                                <span className="font-medium tabular-nums">
+                                    {subscription.limits.max_products >= 999999
+                                        ? `${productCount} / Unlimited`
+                                        : `${productCount} / ${subscription.limits.max_products}`}
                                 </span>
                             </div>
-                            <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-                                <div 
-                                    className="h-full bg-primary" 
-                                    style={{ width: `${(5 / subscription.limits.max_products) * 100}%` }}
-                                />
-                            </div>
+                            <Progress
+                                value={usagePercent(
+                                    productCount,
+                                    subscription.limits.max_products,
+                                )}
+                            />
                         </div>
                         <div>
                             <div className="mb-2 flex justify-between text-sm">
                                 <span>Staff Accounts</span>
-                                <span className="font-medium">
-                                    {subscription.limits.max_staff === 999999 ? "Unlimited" : `1 / ${subscription.limits.max_staff}`}
+                                <span className="font-medium tabular-nums">
+                                    {subscription.limits.max_staff >= 999999
+                                        ? `${staffCount} / Unlimited`
+                                        : `${staffCount} / ${subscription.limits.max_staff}`}
                                 </span>
                             </div>
-                            <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-                                <div 
-                                    className="h-full bg-primary" 
-                                    style={{ width: `${(1 / subscription.limits.max_staff) * 100}%` }}
-                                />
-                            </div>
+                            <Progress
+                                value={usagePercent(
+                                    staffCount,
+                                    subscription.limits.max_staff,
+                                )}
+                            />
                         </div>
                     </div>
                 </div>
