@@ -1,5 +1,5 @@
 import { requireActiveShopContext } from "@/lib/shop-context";
-import { getOrder, transitionOrder } from "@/lib/api";
+import { getOrder, transitionOrder, getCourierAccounts } from "@/lib/api";
 import { Badge } from "@repo/ui/components/ui/badge";
 import { Button } from "@repo/ui/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/components/ui/card";
@@ -25,6 +25,7 @@ import {
 } from "@repo/ui/components/ui/table";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { FulfillmentCard } from "./FulfillmentCard";
 
 export default async function OrderDetailPage({
     params,
@@ -32,7 +33,10 @@ export default async function OrderDetailPage({
     params: { id: string };
 }) {
     const context = await requireActiveShopContext();
-    const orderRes = await getOrder(context.shopId, params.id);
+    const [orderRes, courierAccountsRes] = await Promise.all([
+        getOrder(context.shopId, params.id),
+        getCourierAccounts(context.shopId),
+    ]);
 
     if (!orderRes.success) {
         return (
@@ -194,6 +198,15 @@ export default async function OrderDetailPage({
                 </div>
 
                 <div className="space-y-6">
+                    <FulfillmentCard
+                        shopId={context.shopId}
+                        orderId={order.id}
+                        orderStatus={order.status}
+                        shippingAddress={order.shipping_address}
+                        amountToCollect={Number(order.total_amount) || 0}
+                        initialConsignments={order.consignments || []}
+                        courierAccounts={courierAccountsRes.success ? courierAccountsRes.data : []}
+                    />
                     <Card>
                         <CardHeader>
                             <CardTitle className="text-lg flex items-center gap-2">

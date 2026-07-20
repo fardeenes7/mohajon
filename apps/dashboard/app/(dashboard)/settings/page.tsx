@@ -12,6 +12,7 @@ import {
     IconChevronRight,
     IconUsers,
     IconUserCircle,
+    IconTruck,
 } from "@tabler/icons-react";
 import {
     Card,
@@ -74,6 +75,12 @@ const SETTINGS_LINKS: SettingsLink[] = [
         description: "View your store address and connect a custom domain.",
         href: "/settings/domain",
         icon: IconGlobe,
+    },
+    {
+        title: "Shipping & Couriers",
+        description: "Configure courier accounts, API credentials, and default stores.",
+        href: "/settings/shipping",
+        icon: IconTruck,
     },
     {
         title: "Billing & Plans",

@@ -992,3 +992,87 @@ export async function saveWhatsAppOAuthSelection(shopId: string, data: any) {
     });
 }
 
+// ─── Shipping API ────────────────────────────────────────────────────────────
+
+export async function getCourierAccounts(shopId: string) {
+    return authFetcher("/api/v1/shipping/accounts/", {
+        headers: { "X-Tenant-ID": shopId },
+    });
+}
+
+export async function configureCourierAccount(
+    shopId: string,
+    data: {
+        provider: string;
+        credentials: Record<string, string>;
+        is_test_mode?: boolean;
+        label?: string;
+        default_store_id?: string;
+    },
+) {
+    const res = await authFetcher("/api/v1/shipping/accounts/configure/", {
+        method: "POST",
+        body: data,
+        headers: { "X-Tenant-ID": shopId },
+    });
+    if (res.success) {
+        revalidatePath("/settings/shipping");
+    }
+    return res;
+}
+
+export async function getCourierLocations(
+    shopId: string,
+    params: { provider: string; city_id?: number; zone_id?: number },
+) {
+    const query = new URLSearchParams();
+    query.append("provider", params.provider);
+    if (params.city_id !== undefined) query.append("city_id", String(params.city_id));
+    if (params.zone_id !== undefined) query.append("zone_id", String(params.zone_id));
+
+    return authFetcher(`/api/v1/shipping/locations/?${query.toString()}`, {
+        headers: { "X-Tenant-ID": shopId },
+    });
+}
+
+export async function estimateShippingPrice(
+    shopId: string,
+    data: { provider: string; price_request: Record<string, any> },
+) {
+    return authFetcher("/api/v1/shipping/estimate-price/", {
+        method: "POST",
+        body: data,
+        headers: { "X-Tenant-ID": shopId },
+    });
+}
+
+export async function getConsignments(shopId: string) {
+    return authFetcher("/api/v1/shipping/consignments/", {
+        headers: { "X-Tenant-ID": shopId },
+    });
+}
+
+export async function createShipment(
+    shopId: string,
+    data: { order_id: string; provider: string },
+) {
+    const res = await authFetcher("/api/v1/shipping/consignments/create/", {
+        method: "POST",
+        body: data,
+        headers: { "X-Tenant-ID": shopId },
+    });
+    if (res.success) {
+        revalidatePath("/shipping");
+        revalidatePath("/orders");
+        revalidatePath(`/orders/${data.order_id}`);
+    }
+    return res;
+}
+
+export async function getShipmentTracking(shopId: string, consignmentId: string) {
+    return authFetcher(`/api/v1/shipping/consignments/${consignmentId}/tracking/`, {
+        headers: { "X-Tenant-ID": shopId },
+    });
+}
+
+

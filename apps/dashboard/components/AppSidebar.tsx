@@ -24,7 +24,8 @@ import {
     IconUsers,
     IconUserCircle,
     IconAddressBook,
-    IconHistory
+    IconHistory,
+    IconTruck
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -66,6 +67,12 @@ const sidebarGroups = [
         items: [
             { title: "Store Builder", href: "/builder", icon: IconBuildingStore },
             { title: "POS System", href: "/pos", icon: IconDeviceIpadHorizontal }
+        ]
+    },
+    {
+        label: "Operations",
+        items: [
+            { title: "Shipments", href: "/shipping", icon: IconTruck }
         ]
     },
     {
