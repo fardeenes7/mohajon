@@ -1,13 +1,19 @@
-import { getInboxList } from "@/lib/api";
-import { requireActiveShopContext } from "@/lib/shop-context";
-import { InboxClient } from "./InboxClient";
+import { IconMessage } from "@tabler/icons-react";
 
-export default async function InboxPage() {
-    const activeShop = await requireActiveShopContext();
-    const res = await getInboxList(activeShop.shopId);
-    
-    // We should safely handle failures. If getInboxList fails, we pass empty array or display error.
-    const initialConversations = res.success ? res.data : [];
-
-    return <InboxClient shopId={activeShop.shopId} initialConversations={initialConversations} />;
+/**
+ * Empty state shown at /inbox before a conversation is selected. The sidebar and
+ * live socket are provided by the sibling layout, so this pane is purely visual.
+ */
+export default function InboxIndexPage() {
+    return (
+        <div className="flex h-full flex-col items-center justify-center gap-3 text-center text-muted-foreground">
+            <div className="flex size-14 items-center justify-center rounded-full bg-muted">
+                <IconMessage className="size-7" />
+            </div>
+            <div>
+                <p className="text-sm font-medium text-foreground">Your conversations</p>
+                <p className="text-sm">Select a conversation to start messaging.</p>
+            </div>
+        </div>
+    );
 }

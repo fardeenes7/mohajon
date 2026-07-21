@@ -822,24 +822,53 @@ export async function getInboxList(shopId: string) {
     });
 }
 
-export async function getInboxDetail(shopId: string, psid: string) {
-    return authFetcher(`/api/v1/chat/inbox/${psid}/`, {
+export async function getInboxDetail(
+    shopId: string,
+    psid: string,
+    channel: string = "FACEBOOK",
+    before?: number,
+) {
+    return authFetcher(`/api/v1/chat/inbox/${encodeURIComponent(psid)}/`, {
         headers: { "X-Tenant-ID": shopId },
+        queryParams: before ? { channel, before } : { channel },
     });
 }
 
-export async function humanTakeover(shopId: string, pageId: string, psid: string, action: "takeover" | "handback") {
+/**
+ * Returns the current session's JWT access token so a Client Component can open
+ * an authenticated WebSocket (the httpOnly session cookie is not readable in the
+ * browser). Called on initial connect and on every reconnect to pick up a token
+ * refreshed by NextAuth. Returns null when unauthenticated.
+ */
+export async function getChatWsToken(): Promise<string | null> {
+    const session = await auth();
+    return session?.accessToken ?? null;
+}
+
+export async function humanTakeover(
+    shopId: string,
+    pageId: string,
+    psid: string,
+    action: "takeover" | "handback",
+    channel: string = "FACEBOOK",
+) {
     return authFetcher("/api/v1/chat/takeover/", {
         method: "POST",
-        body: { page_id: pageId, psid, action },
+        body: { page_id: pageId, psid, action, channel },
         headers: { "X-Tenant-ID": shopId },
     });
 }
 
-export async function agentSend(shopId: string, pageId: string, psid: string, text: string) {
+export async function agentSend(
+    shopId: string,
+    pageId: string,
+    psid: string,
+    text: string,
+    channel: string = "FACEBOOK",
+) {
     return authFetcher("/api/v1/chat/send/", {
         method: "POST",
-        body: { page_id: pageId, psid, text },
+        body: { page_id: pageId, psid, text, channel },
         headers: { "X-Tenant-ID": shopId },
     });
 }
