@@ -26,7 +26,13 @@ export interface Conversation {
 export type SystemEvent =
     | "human_takeover"
     | "bot_resumed"
-    | "bot_paused_credits";
+    | "bot_paused_credits"
+    | "ai_rate_limited"
+    | "ai_model_unavailable"
+    | "ai_context_overflow"
+    | "ai_connection_error"
+    | "ai_tool_limit"
+    | "ai_error";
 
 export interface ChatMessage {
     id: string;

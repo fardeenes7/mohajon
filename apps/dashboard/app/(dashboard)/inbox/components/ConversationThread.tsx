@@ -24,6 +24,8 @@ import {
     IconHeadset,
     IconAlertTriangle,
     IconInfoCircle,
+    IconClockPause,
+    IconPlugConnectedX,
     type Icon,
 } from "@tabler/icons-react";
 import { getInboxDetail, humanTakeover, agentSend } from "@/lib/api";
@@ -40,6 +42,15 @@ function systemEventIcon(event: SystemEvent | undefined): Icon {
         case "bot_resumed":
             return IconRobotFace;
         case "bot_paused_credits":
+            return IconAlertTriangle;
+        case "ai_rate_limited":
+            return IconClockPause;
+        case "ai_connection_error":
+            return IconPlugConnectedX;
+        case "ai_model_unavailable":
+        case "ai_context_overflow":
+        case "ai_tool_limit":
+        case "ai_error":
             return IconAlertTriangle;
         default:
             return IconInfoCircle;
