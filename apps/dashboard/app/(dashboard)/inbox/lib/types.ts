@@ -9,6 +9,7 @@ export interface Conversation {
     metadata: Record<string, unknown>;
     page_id: string | null;
     display_name: string;
+    profile_pic: string | null;
     has_unread: boolean;
     unread_count: number;
     last_read_at: string | null;

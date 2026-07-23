@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Avatar, AvatarFallback } from "@repo/ui/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@repo/ui/components/ui/avatar";
 import { Badge } from "@repo/ui/components/ui/badge";
 import { Input } from "@repo/ui/components/ui/input";
 import { ScrollArea } from "@repo/ui/components/ui/scroll-area";
@@ -14,7 +14,7 @@ import { ChannelIcon } from "../lib/channel";
 import type { Conversation } from "../lib/types";
 
 function initials(name: string): string {
-    const trimmed = name.trim();
+    const trimmed = name?.trim();
     if (!trimmed) return "?";
     const parts = trimmed.split(/\s+/);
     if (parts.length === 1) return parts[0]!.substring(0, 2).toUpperCase();
@@ -49,6 +49,8 @@ function ConversationRow({
     conv: Conversation;
     active: boolean;
 }) {
+    const profilePic = conv.profile_pic || (conv.metadata?.profile_pic || conv.metadata?.avatar_url) as string | undefined;
+
     return (
         <Link
             href={`/inbox/${conv.id}`}
@@ -59,6 +61,9 @@ function ConversationRow({
         >
             <div className="relative shrink-0">
                 <Avatar className="size-10">
+                    {profilePic ? (
+                        <AvatarImage src={profilePic} alt={conv.display_name} />
+                    ) : null}
                     <AvatarFallback className="text-xs">
                         {initials(conv.display_name)}
                     </AvatarFallback>
@@ -83,10 +88,10 @@ function ConversationRow({
                         {relativeTime(conv.last_message_at ?? conv.updated_at)}
                     </span>
                 </div>
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center justify-between gap-2 w-full">
                     <p
                         className={cn(
-                            "truncate text-xs",
+                            "min-w-0 flex-1 truncate text-xs",
                             conv.has_unread
                                 ? "text-foreground"
                                 : "text-muted-foreground",

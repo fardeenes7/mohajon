@@ -13,7 +13,7 @@ import {
 import { Message, MessageContent, MessageFooter } from "@repo/ui/components/ui/message";
 import { Bubble, BubbleContent } from "@repo/ui/components/ui/bubble";
 import { Marker, MarkerContent, MarkerIcon } from "@repo/ui/components/ui/marker";
-import { Avatar, AvatarFallback } from "@repo/ui/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@repo/ui/components/ui/avatar";
 import { Button } from "@repo/ui/components/ui/button";
 import { Badge } from "@repo/ui/components/ui/badge";
 import { Spinner } from "@repo/ui/components/ui/spinner";
@@ -33,6 +33,7 @@ import { useInbox } from "../lib/InboxProvider";
 import { ChannelIcon, channelMeta } from "../lib/channel";
 import type { ChatMessage, Conversation, SystemEvent } from "../lib/types";
 import { Composer } from "./Composer";
+import { ProfileSidebar } from "./ProfileSidebar";
 
 /** Icon per SYSTEM event key for the inline timeline marker. */
 function systemEventIcon(event: SystemEvent | undefined): Icon {
@@ -216,159 +217,165 @@ export function ConversationThread({ conversation }: { conversation: Conversatio
         }
     };
 
+    const profilePic = conversation.profile_pic || (conversation.metadata?.profile_pic || conversation.metadata?.avatar_url) as string | undefined;
+
     return (
-        <div className="flex h-full flex-col">
-            {/* Header */}
-            <div className="flex h-16 shrink-0 items-center justify-between border-b px-4">
-                <div className="flex items-center gap-3">
-                    <div className="relative">
-                        <Avatar className="size-9">
-                            <AvatarFallback className="text-xs">
-                                {conversation.display_name.substring(0, 2).toUpperCase()}
-                            </AvatarFallback>
-                        </Avatar>
-                        <span className="absolute -bottom-0.5 -right-0.5 rounded-full bg-background p-0.5 ring-1 ring-border">
-                            <ChannelIcon channel={channel} className="size-3.5" />
-                        </span>
-                    </div>
-                    <div className="min-w-0">
-                        <div className="truncate text-sm font-semibold">
-                            {conversation.display_name}
+        <div className="flex h-full w-full overflow-hidden">
+            <div className="flex min-w-0 flex-1 flex-col h-full">
+                {/* Header */}
+                <div className="flex h-16 shrink-0 items-center justify-between border-b px-4">
+                    <div className="flex items-center gap-3">
+                        <div className="relative">
+                            <Avatar className="size-9">
+                                {profilePic ? (
+                                    <AvatarImage src={profilePic} alt={conversation.display_name} />
+                                ) : null}
+                                <AvatarFallback className="text-xs">
+                                    {conversation.display_name.substring(0, 2).toUpperCase()}
+                                </AvatarFallback>
+                            </Avatar>
+                            <span className="absolute -bottom-0.5 -right-0.5 rounded-full bg-background p-0.5 ring-1 ring-border">
+                                <ChannelIcon channel={channel} className="size-3.5" />
+                            </span>
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <span>{meta.label}</span>
-                            {humanActive ? (
-                                <Badge variant="secondary" className="gap-1 text-[10px]">
-                                    <IconHeadset className="size-3" />
-                                    You&apos;re handling this
-                                </Badge>
-                            ) : botActive ? (
-                                <Badge variant="outline" className="gap-1 text-[10px] text-green-600 dark:text-green-500">
-                                    <IconRobotFace className="size-3" />
-                                    Bot active
-                                </Badge>
-                            ) : (
-                                <Badge variant="outline" className="gap-1 text-[10px]">
-                                    <IconUser className="size-3" />
-                                    Human-only mode
-                                </Badge>
-                            )}
-                        </div>
-                    </div>
-                </div>
-                <div className="flex gap-2">
-                    {humanActive ? (
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            disabled={takingOver}
-                            onClick={() => handleTakeover("handback")}
-                        >
-                            <IconRobot className="mr-1.5 size-4" />
-                            Hand back to bot
-                        </Button>
-                    ) : (
-                        <Button
-                            variant="default"
-                            size="sm"
-                            disabled={takingOver}
-                            onClick={() => handleTakeover("takeover")}
-                        >
-                            <IconHeadset className="mr-1.5 size-4" />
-                            Take over
-                        </Button>
-                    )}
-                </div>
-            </div>
-
-            {/* Messages */}
-            {loading ? (
-                <div className="flex flex-1 items-center justify-center">
-                    <Spinner className="size-6 text-muted-foreground" />
-                </div>
-            ) : (
-                <MessageScrollerProvider autoScroll>
-                    <MessageScroller className="flex-1 bg-muted/20">
-                        <MessageScrollerViewport>
-                            <MessageScrollerContent className="gap-2 p-4 *:data-message-scroller-spacer:hidden">
-                                {messages.length === 0 && (
-                                    <div className="py-10 text-center text-sm text-muted-foreground">
-                                        No messages in this thread yet.
-                                    </div>
+                        <div className="min-w-0">
+                            <div className="truncate text-sm font-semibold">
+                                {conversation.display_name}
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <span>{meta.label}</span>
+                                {humanActive ? (
+                                    <Badge variant="secondary" className="gap-1 text-[10px]">
+                                        <IconHeadset className="size-3" />
+                                        You&apos;re handling this
+                                    </Badge>
+                                ) : botActive ? (
+                                    <Badge variant="outline" className="gap-1 text-[10px] text-green-600 dark:text-green-500">
+                                        <IconRobotFace className="size-3" />
+                                        Bot active
+                                    </Badge>
+                                ) : (
+                                    <Badge variant="outline" className="gap-1 text-[10px]">
+                                        <IconUser className="size-3" />
+                                        Human-only mode
+                                    </Badge>
                                 )}
-                                {messages.map((msg, idx) => {
-                                    const prev = messages[idx - 1];
-                                    const showDay =
-                                        !prev || dayKey(prev.timestamp) !== dayKey(msg.timestamp);
-                                    const isSystem = msg.direction === "SYSTEM";
-                                    const isOutbound = msg.direction === "OUTBOUND";
-                                    const dayMarker = showDay && (
-                                        <Marker variant="separator" className="my-2">
-                                            <MarkerContent className="text-[11px]">
-                                                {dayLabel(msg.timestamp)}
-                                            </MarkerContent>
-                                        </Marker>
-                                    );
+                            </div>
+                        </div>
+                    </div>
+                    <div className="flex gap-2">
+                        {humanActive ? (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={takingOver}
+                                onClick={() => handleTakeover("handback")}
+                            >
+                                <IconRobot className="mr-1.5 size-4" />
+                                Hand back to bot
+                            </Button>
+                        ) : (
+                            <Button
+                                variant="default"
+                                size="sm"
+                                disabled={takingOver}
+                                onClick={() => handleTakeover("takeover")}
+                            >
+                                <IconHeadset className="mr-1.5 size-4" />
+                                Take over
+                            </Button>
+                        )}
+                    </div>
+                </div>
 
-                                    // No scrollAnchor: this is a two-party inbox, so new
-                                    // messages belong at the bottom (autoScroll pins there).
-                                    // Anchoring the last item makes the scroller pad a tall
-                                    // spacer below it to pull it to the top — the big gap.
-                                    if (isSystem) {
-                                        const event = (
-                                            msg.attachment_payload as { event?: SystemEvent } | null
-                                        )?.event;
-                                        const EventIcon = systemEventIcon(event);
+                {/* Messages */}
+                {loading ? (
+                    <div className="flex flex-1 items-center justify-center">
+                        <Spinner className="size-6 text-muted-foreground" />
+                    </div>
+                ) : (
+                    <MessageScrollerProvider autoScroll>
+                        <MessageScroller className="flex-1 bg-muted/20">
+                            <MessageScrollerViewport>
+                                <MessageScrollerContent className="gap-2 p-4 *:data-message-scroller-spacer:hidden">
+                                    {messages.length === 0 && (
+                                        <div className="py-10 text-center text-sm text-muted-foreground">
+                                            No messages in this thread yet.
+                                        </div>
+                                    )}
+                                    {messages.map((msg, idx) => {
+                                        const prev = messages[idx - 1];
+                                        const showDay =
+                                            !prev || dayKey(prev.timestamp) !== dayKey(msg.timestamp);
+                                        const isSystem = msg.direction === "SYSTEM";
+                                        const isOutbound = msg.direction === "OUTBOUND";
+                                        const dayMarker = showDay && (
+                                            <Marker variant="separator" className="my-2">
+                                                <MarkerContent className="text-[11px]">
+                                                    {dayLabel(msg.timestamp)}
+                                                </MarkerContent>
+                                            </Marker>
+                                        );
+
+                                        if (isSystem) {
+                                            const event = (
+                                                msg.attachment_payload as { event?: SystemEvent } | null
+                                            )?.event;
+                                            const EventIcon = systemEventIcon(event);
+                                            return (
+                                                <MessageScrollerItem key={msg.renderKey}>
+                                                    {dayMarker}
+                                                    <Marker className="justify-center py-1 text-center text-xs">
+                                                        <MarkerIcon>
+                                                            <EventIcon />
+                                                        </MarkerIcon>
+                                                        <MarkerContent>
+                                                            {msg.text}
+                                                            <span className="ml-1.5 opacity-70">
+                                                                · {timeLabel(msg.timestamp)}
+                                                            </span>
+                                                        </MarkerContent>
+                                                    </Marker>
+                                                </MessageScrollerItem>
+                                            );
+                                        }
+
                                         return (
                                             <MessageScrollerItem key={msg.renderKey}>
                                                 {dayMarker}
-                                                <Marker className="justify-center py-1 text-center text-xs">
-                                                    <MarkerIcon>
-                                                        <EventIcon />
-                                                    </MarkerIcon>
-                                                    <MarkerContent>
-                                                        {msg.text}
-                                                        <span className="ml-1.5 opacity-70">
-                                                            · {timeLabel(msg.timestamp)}
-                                                        </span>
-                                                    </MarkerContent>
-                                                </Marker>
+                                                <Message align={isOutbound ? "end" : "start"}>
+                                                    <MessageContent>
+                                                        <Bubble
+                                                            variant={isOutbound ? "default" : "muted"}
+                                                            align={isOutbound ? "end" : "start"}
+                                                        >
+                                                            <BubbleContent>
+                                                                {msg.text ||
+                                                                    (msg.attachment_payload
+                                                                        ? "📎 Attachment"
+                                                                        : "")}
+                                                            </BubbleContent>
+                                                        </Bubble>
+                                                        <MessageFooter>
+                                                            {timeLabel(msg.timestamp)}
+                                                        </MessageFooter>
+                                                    </MessageContent>
+                                                </Message>
                                             </MessageScrollerItem>
                                         );
-                                    }
+                                    })}
+                                </MessageScrollerContent>
+                            </MessageScrollerViewport>
+                            <MessageScrollerButton variant="secondary" size="icon-sm" />
+                        </MessageScroller>
+                    </MessageScrollerProvider>
+                )}
 
-                                    return (
-                                        <MessageScrollerItem key={msg.renderKey}>
-                                            {dayMarker}
-                                            <Message align={isOutbound ? "end" : "start"}>
-                                                <MessageContent>
-                                                    <Bubble
-                                                        variant={isOutbound ? "default" : "muted"}
-                                                        align={isOutbound ? "end" : "start"}
-                                                    >
-                                                        <BubbleContent>
-                                                            {msg.text ||
-                                                                (msg.attachment_payload
-                                                                    ? "📎 Attachment"
-                                                                    : "")}
-                                                        </BubbleContent>
-                                                    </Bubble>
-                                                    <MessageFooter>
-                                                        {timeLabel(msg.timestamp)}
-                                                    </MessageFooter>
-                                                </MessageContent>
-                                            </Message>
-                                        </MessageScrollerItem>
-                                    );
-                                })}
-                            </MessageScrollerContent>
-                        </MessageScrollerViewport>
-                        <MessageScrollerButton variant="secondary" size="icon-sm" />
-                    </MessageScroller>
-                </MessageScrollerProvider>
-            )}
+                <Composer onSend={handleSend} />
+            </div>
 
-            <Composer onSend={handleSend} />
+            {/* Profile Sidebar */}
+            <ProfileSidebar conversation={conversation} />
         </div>
     );
 }
