@@ -92,11 +92,11 @@ export async function completeSocialOAuthSelectionAction(formData: FormData) {
 
 export async function disconnectWhatsAppAction(formData: FormData) {
     const shopId = String(formData.get("shopId") || "");
-    if (!shopId) return { error: "Missing shop ID" };
+    if (!shopId) return;
 
     const { disconnectWhatsAppConfig } = await import("@/lib/api");
     const res = await disconnectWhatsAppConfig(shopId);
-    if (!res.success) return { error: res.error || "Failed to disconnect" };
+    if (!res.success) return;
 
     revalidatePath("/settings/social");
 }

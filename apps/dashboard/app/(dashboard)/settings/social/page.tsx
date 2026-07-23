@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import {
     Alert,
     AlertDescription,
     AlertTitle
 } from "@repo/ui/components/ui/alert";
-import { IconInfoCircle } from "@tabler/icons-react";
+import { IconInfoCircle, IconAlertCircle } from "@tabler/icons-react";
 import { getSocialConnections, getWhatsAppConfig } from "@/lib/api";
 import { handleSocialOAuthCallback, handleWhatsAppOAuthCallback } from "@/lib/api";
 import { requireActiveShopContext } from "@/lib/shop-context";
@@ -19,7 +20,6 @@ import {
     CardTitle
 } from "@repo/ui/components/ui/card";
 import {
-    completeSocialOAuthSelectionAction,
     startSocialOAuthAction,
     completeWhatsAppOAuthSelectionAction,
 } from "./actions";
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
 export default async function SocialConnectionsPage({
     searchParams
 }: {
-    searchParams: Promise<{ code?: string; state?: string }>;
+    searchParams: Promise<{ code?: string; state?: string; error?: string; error_description?: string; error_reason?: string }>;
 }) {
     const activeShop = await requireActiveShopContext();
     const params = await searchParams;
@@ -40,8 +40,11 @@ export default async function SocialConnectionsPage({
     let oauthStateForSelection: string | null = null;
     let oauthPages: Array<{ id: string; name: string; display_phone_number?: string }> = [];
     let isWhatsAppAuth = false;
+    let socialError: string | null = null;
 
-    if (params.code && params.state) {
+    if (params.error || params.error_description || params.error_reason) {
+        socialError = params.error_description || params.error_reason || params.error || "Meta connection was cancelled or denied.";
+    } else if (params.code && params.state) {
         isWhatsAppAuth = params.state.startsWith("wa_");
         
         if (isWhatsAppAuth) {
@@ -52,15 +55,19 @@ export default async function SocialConnectionsPage({
             if (oauthRes.success) {
                 oauthStateForSelection = oauthRes.data.oauth_state ?? null;
                 oauthPages = oauthRes.data.pages ?? [];
+            } else {
+                socialError = oauthRes.error || "Failed to complete WhatsApp connection.";
             }
         } else {
+            const cleanState = params.state.split("#")[0];
             const oauthRes = await handleSocialOAuthCallback(activeShop.shopId, {
                 code: params.code,
-                state: params.state
+                state: cleanState
             });
             if (oauthRes.success) {
-                oauthStateForSelection = oauthRes.data.oauth_state ?? null;
-                oauthPages = oauthRes.data.pages ?? [];
+                redirect("/settings/social");
+            } else {
+                socialError = oauthRes.error || "Failed to connect Meta account. Please try again.";
             }
         }
     }
@@ -76,6 +83,14 @@ export default async function SocialConnectionsPage({
                     Connect Meta pages and manage social publishing health.
                 </p>
             </div>
+
+            {socialError ? (
+                <Alert variant="destructive">
+                    <IconAlertCircle className="size-4" />
+                    <AlertTitle>Meta Connection Failed</AlertTitle>
+                    <AlertDescription>{socialError}</AlertDescription>
+                </Alert>
+            ) : null}
 
             <Alert>
                 <IconInfoCircle className="size-4" />
@@ -95,7 +110,7 @@ export default async function SocialConnectionsPage({
                 <CardHeader>
                     <CardTitle>Facebook Connect</CardTitle>
                     <CardDescription>
-                        Connect Meta via OAuth and choose a managed page for Product Publishing.
+                        Connect Meta via OAuth to automatically connect all managed Facebook pages.
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-4">
@@ -104,42 +119,6 @@ export default async function SocialConnectionsPage({
                         shopId={activeShop.shopId} 
                         buttonText="Connect with Meta OAuth" 
                     />
-
-                    {oauthStateForSelection && oauthPages.length > 0 && !isWhatsAppAuth ? (
-                        <form
-                            action={completeSocialOAuthSelectionAction}
-                            className="flex items-center gap-3"
-                        >
-                            <input
-                                type="hidden"
-                                name="shopId"
-                                value={activeShop.shopId}
-                            />
-                            <input
-                                type="hidden"
-                                name="oauthState"
-                                value={oauthStateForSelection}
-                            />
-                            <select
-                                name="selectedPageId"
-                                required
-                                className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-                                defaultValue=""
-                            >
-                                <option value="" disabled>
-                                    Select page to connect
-                                </option>
-                                {oauthPages.map((page) => (
-                                    <option key={page.id} value={page.id}>
-                                        {page.name}
-                                    </option>
-                                ))}
-                            </select>
-                            <Button type="submit" variant="outline">
-                                Save Selected Page
-                            </Button>
-                        </form>
-                    ) : null}
                     
                     {oauthStateForSelection && oauthPages.length > 0 && isWhatsAppAuth ? (
                         <form
