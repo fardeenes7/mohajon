@@ -8,9 +8,11 @@ interface ActionFormProps {
     action: (formData: FormData) => Promise<{ error?: string } | void>;
     shopId: string;
     buttonText: string;
+    variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
+    children?: React.ReactNode;
 }
 
-export function ActionForm({ action, shopId, buttonText }: ActionFormProps) {
+export function ActionForm({ action, shopId, buttonText, variant = "default", children }: ActionFormProps) {
     const [isPending, startTransition] = useTransition();
 
     const handleSubmit = (formData: FormData) => {
@@ -30,9 +32,10 @@ export function ActionForm({ action, shopId, buttonText }: ActionFormProps) {
     };
 
     return (
-        <form action={handleSubmit}>
+        <form action={handleSubmit} className="flex items-center gap-3">
             <input type="hidden" name="shopId" value={shopId} />
-            <Button type="submit" disabled={isPending}>
+            {children}
+            <Button type="submit" variant={variant} disabled={isPending}>
                 {isPending ? "Loading..." : buttonText}
             </Button>
         </form>

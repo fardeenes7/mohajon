@@ -62,6 +62,7 @@ export interface ProductListItem {
   thumbnail: string | null;
   category_name: string | null;
   is_digital: boolean;
+  vector_status?: "PENDING" | "CREATED" | "SKIPPED" | "FAILED";
   sort_order: number;
   created_at: string;
 }

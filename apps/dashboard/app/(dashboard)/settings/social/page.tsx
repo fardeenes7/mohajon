@@ -121,15 +121,11 @@ export default async function SocialConnectionsPage({
                     />
                     
                     {oauthStateForSelection && oauthPages.length > 0 && isWhatsAppAuth ? (
-                        <form
+                        <ActionForm
                             action={completeWhatsAppOAuthSelectionAction}
-                            className="flex items-center gap-3"
+                            shopId={activeShop.shopId}
+                            buttonText="Save WhatsApp Number"
                         >
-                            <input
-                                type="hidden"
-                                name="shopId"
-                                value={activeShop.shopId}
-                            />
                             <input
                                 type="hidden"
                                 name="oauthState"
@@ -150,10 +146,7 @@ export default async function SocialConnectionsPage({
                                     </option>
                                 ))}
                             </select>
-                            <Button type="submit" variant="outline">
-                                Save WhatsApp Number
-                            </Button>
-                        </form>
+                        </ActionForm>
                     ) : null}
                 </CardContent>
             </Card>

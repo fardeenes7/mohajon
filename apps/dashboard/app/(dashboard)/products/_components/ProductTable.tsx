@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
     IconEdit,
+    IconEye,
     IconTrash,
     IconDotsVertical,
     IconWorldUpload,
@@ -41,6 +42,7 @@ import {
 import { Button } from "@repo/ui/components/ui/button";
 import { Skeleton } from "@repo/ui/components/ui/skeleton";
 import { ProductStatusBadge } from "./ProductStatusBadge";
+import { EmbeddingStatusBadge } from "./EmbeddingStatusBadge";
 import type { ProductListItem } from "@repo/api";
 import {
     deleteProduct,
@@ -167,6 +169,7 @@ export function ProductTable({
                             <TableHead>Product</TableHead>
                             <TableHead>SKU</TableHead>
                             <TableHead>Status</TableHead>
+                            <TableHead>RAG AI</TableHead>
                             <TableHead className="text-right">Stock</TableHead>
                             <TableHead className="text-right">Price</TableHead>
                             <TableHead className="w-12" />
@@ -217,6 +220,11 @@ export function ProductTable({
                                         status={product.status}
                                     />
                                 </TableCell>
+                                <TableCell>
+                                    <EmbeddingStatusBadge
+                                        status={product.vector_status}
+                                    />
+                                </TableCell>
                                 <TableCell className="text-right tabular-nums">
                                     <span
                                         className={
@@ -262,6 +270,14 @@ export function ProductTable({
                                             </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end">
+                                            <DropdownMenuItem asChild>
+                                                <Link
+                                                    href={`/products/${product.id}`}
+                                                >
+                                                    <IconEye data-icon="inline-start" />
+                                                    View Details
+                                                </Link>
+                                            </DropdownMenuItem>
                                             <DropdownMenuItem asChild>
                                                 <Link
                                                     href={`/products/${product.id}/edit`}
