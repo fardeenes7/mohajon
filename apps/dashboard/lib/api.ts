@@ -936,9 +936,17 @@ export async function getShopSettings(shopId: string) {
     });
 }
 
-export async function getAiUsageLog(shopId: string) {
+export async function getAiUsageLog(shopId: string, params?: any) {
     return authFetcher("/api/v1/billing/ai-usage/", {
         headers: { "X-Tenant-ID": shopId },
+        queryParams: params,
+    });
+}
+
+export async function getAiCreditLogs(shopId: string, params?: any) {
+    return authFetcher("/api/v1/billing/ai-credit-lots/", {
+        headers: { "X-Tenant-ID": shopId },
+        queryParams: params,
     });
 }
 
