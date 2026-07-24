@@ -6,15 +6,15 @@ import {
     CardHeader,
     CardTitle,
 } from "@repo/ui/components/ui/card";
-import { Input } from "@repo/ui/components/ui/input";
-import { Label } from "@repo/ui/components/ui/label";
 import { Badge } from "@repo/ui/components/ui/badge";
 import { Separator } from "@repo/ui/components/ui/separator";
+import { IconBrandMeta } from "@tabler/icons-react";
 import type { SocialConnection } from "@repo/api";
 import {
-    createSocialConnectionAction,
     disconnectSocialConnectionAction,
+    startSocialOAuthAction,
 } from "./actions";
+import { ActionForm } from "./ActionForm";
 
 interface SocialConnectionsPanelProps {
     shopId: string;
@@ -26,99 +26,79 @@ export function SocialConnectionsPanel({
     initialConnections,
 }: SocialConnectionsPanelProps) {
     return (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Connect Meta Page</CardTitle>
+        <Card>
+            <CardHeader className="flex flex-row items-start justify-between">
+                <div className="space-y-1.5">
+                    <CardTitle className="flex items-center gap-2">
+                        <IconBrandMeta className="size-5 text-blue-600 dark:text-blue-500" />
+                        Meta Pages
+                    </CardTitle>
                     <CardDescription>
-                        Add a page access token to enable product posting
-                        automation.
+                        Connect Facebook and Instagram pages for publishing.
                     </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <form
-                        className="space-y-4"
-                        action={createSocialConnectionAction}
-                    >
-                        <input type="hidden" name="shopId" value={shopId} />
-                        <div className="space-y-2">
-                            <Label htmlFor="meta-page-id">Page ID</Label>
-                            <Input id="meta-page-id" name="pageId" required />
+                </div>
+                {initialConnections.length > 0 && (
+                    <ActionForm
+                        action={startSocialOAuthAction}
+                        shopId={shopId}
+                        buttonText="Connect Meta Page"
+                        variant="outline"
+                    />
+                )}
+            </CardHeader>
+            <CardContent>
+                {initialConnections.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center gap-4 rounded-lg border border-dashed p-8 text-center bg-muted/10">
+                        <div className="rounded-full bg-muted p-3">
+                            <IconBrandMeta className="size-6 text-muted-foreground" />
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="meta-page-name">Page Name</Label>
-                            <Input
-                                id="meta-page-name"
-                                name="pageName"
-                                required
+                        <div className="max-w-sm space-y-1">
+                            <p className="text-sm font-medium">No pages connected</p>
+                            <p className="text-sm text-muted-foreground">
+                                Connect via Meta OAuth to automatically link your Facebook and Instagram pages.
+                            </p>
+                        </div>
+                        <div className="pt-2">
+                            <ActionForm
+                                action={startSocialOAuthAction}
+                                shopId={shopId}
+                                buttonText="Connect with Meta OAuth"
                             />
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="meta-access-token">
-                                Page Access Token
-                            </Label>
-                            <Input
-                                id="meta-access-token"
-                                name="accessToken"
-                                required
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="meta-expires-in">
-                                Expires In (seconds)
-                            </Label>
-                            <Input
-                                id="meta-expires-in"
-                                name="expiresIn"
-                                type="number"
-                                min={0}
-                                defaultValue={"5184000"}
-                            />
-                        </div>
-                        <Button type="submit">Connect Page</Button>
-                    </form>
-                </CardContent>
-            </Card>
-
-            <Card>
-                <CardHeader>
-                    <CardTitle>Connected Pages</CardTitle>
-                    <CardDescription>
-                        Current social destinations available for publishing.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                    {initialConnections.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">
-                            No connections yet.
-                        </p>
-                    ) : (
-                        initialConnections.map((connection) => (
+                    </div>
+                ) : (
+                    <div className="grid gap-3">
+                        {initialConnections.map((connection) => (
                             <div
                                 key={connection.id}
-                                className="rounded-md border p-3"
+                                className="rounded-lg border bg-muted/40 p-5 shadow-sm space-y-4"
                             >
                                 <div className="flex items-start justify-between gap-4">
-                                    <div>
-                                        <p className="font-medium">
+                                    <div className="space-y-1">
+                                        <p className="font-medium leading-none">
                                             {connection.page_name}
                                         </p>
-                                        <p className="text-xs text-muted-foreground">
+                                        <p className="text-sm text-muted-foreground">
                                             Page ID: {connection.page_id}
                                         </p>
                                     </div>
                                     <Badge
                                         variant={
                                             connection.status === "ACTIVE"
-                                                ? "default"
+                                                ? "outline"
                                                 : "secondary"
+                                        }
+                                        className={
+                                            connection.status === "ACTIVE"
+                                                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                                                : ""
                                         }
                                     >
                                         {connection.status}
                                     </Badge>
                                 </div>
-                                <Separator className="my-3" />
-                                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                <Separator className="bg-border/60" />
+                                <div className="flex items-center justify-between text-sm text-muted-foreground">
                                     <span>
                                         Token expiry:{" "}
                                         {connection.token_expires_at ??
@@ -143,16 +123,17 @@ export function SocialConnectionsPanel({
                                             variant="outline"
                                             size="sm"
                                             type="submit"
+                                            className="bg-background"
                                         >
                                             Disconnect
                                         </Button>
                                     </form>
                                 </div>
                             </div>
-                        ))
-                    )}
-                </CardContent>
-            </Card>
-        </div>
+                        ))}
+                    </div>
+                )}
+            </CardContent>
+        </Card>
     );
 }

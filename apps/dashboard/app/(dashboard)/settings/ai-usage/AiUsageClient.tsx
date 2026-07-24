@@ -61,7 +61,7 @@ export function AiUsageClient({ shopId, initialCreditBalance, initialUsageLogs, 
                     <BuyCreditsDialog shopId={shopId} />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-4xl font-bold">{parseFloat(initialCreditBalance.toString()).toFixed(2)}</div>
+                    <div className="text-4xl font-bold">{parseFloat(initialCreditBalance?.toString()).toFixed(2)}</div>
                 </CardContent>
             </Card>
 

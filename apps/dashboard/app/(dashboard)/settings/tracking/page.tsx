@@ -27,7 +27,7 @@ export default async function TrackingConfigPage() {
     }
 
     return (
-        <div className="flex flex-col gap-6">
+        <div className="container flex flex-col gap-6">
             <div>
                 <h1 className="text-2xl font-semibold">Tracking & Pixels</h1>
                 <p className="text-sm text-muted-foreground mt-0.5">
