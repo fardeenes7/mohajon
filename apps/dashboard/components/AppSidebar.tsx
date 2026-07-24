@@ -79,8 +79,7 @@ const sidebarGroups = [
         label: "Analytics & Growth",
         items: [
             { title: "Advanced Analytics", href: "/analytics", icon: IconChartBar },
-            { title: "Affiliate Program", href: "/affiliates", icon: IconAffiliate },
-            { title: "Marketing / Ads", href: "/marketing/ads", icon: IconSpeakerphone }
+            { title: "Affiliate Program", href: "/affiliates", icon: IconAffiliate }
         ]
     },
     {
